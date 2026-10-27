@@ -335,7 +335,8 @@ src/Game/    Actors (сущности), Sprites (процедурные суще
 src/UI/      Hud, Tooltip, Panels (инвентарь/паутина/карта/лавка/пауза/смерть/журнал/справка/меню),
              MainWindow
 assets/      sprites/ и tiles/ — опциональные внешние спрайт-листы и тайлсеты (PNG+JSON);
-             игра подхватывает их рядом с exe или в текущей папке
+             sounds/ — папка внешних звуков (wav/ogg/mp3; см. assets/sounds/README.txt,
+             назначение слотов — mapping.txt); без файлов работают синтезированные звуки
 tools/       Python-генераторы спрайт-листов и тайлсетов (make_*.py, slice_sheet.py)
 tests/       smoke.cpp, shots.cpp, bench.cpp, sprcheck.cpp
 docs/        документация (SPRITES.md и др.)
