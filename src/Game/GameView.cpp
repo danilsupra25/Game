@@ -528,7 +528,23 @@ void GameView::updateSim(float dt)
         m_pending.clear();
         for (int i = 0; i < pend.size(); ++i) {
             const PendingSpawn &ps = pend.at(i);
-            if (ps.summon) spawnSummon(ps.defId, ps.pos, ps.owner, ps.life, ps.dmgMul);
+            if (ps.summon) {
+                if (ps.raiserId >= 0) {
+                    // поднят жрецом из трупа: сражается на его стороне, недолго живёт
+                    int raiserOwner = -1;
+                    bool ok = false;
+                    for (int k = 0; k < m_actors.size(); ++k)
+                        if (m_actors[k].id == ps.raiserId && !m_actors[k].dead) { raiserOwner = m_actors[k].owner; ok = true; break; }
+                    spawnSummon(ps.defId, ps.pos, ok ? raiserOwner : -1, 12.f, ok ? 0.8f : 0.7f);
+                    if (!m_actors.isEmpty()) {
+                        // перекрашиваем слугу в «восставшего» (фиолетовый оттенок)
+                        Actor &s = m_actors[m_actors.size() - 1];
+                        s.tint = QColor(150, 90, 200).darker(120);
+                    }
+                } else {
+                    spawnSummon(ps.defId, ps.pos, ps.owner, ps.life, ps.dmgMul);
+                }
+            }
             else spawnEnemy(ps.defId, ps.pos, ps.elite, ps.levelDelta);
         }
     }

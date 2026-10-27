@@ -254,7 +254,8 @@ private:
     QVector<Telegraph> m_tels;
     QVector<Pickup> m_pickups;
     QVector<Npc> m_npcs;
-    struct PendingSpawn { int defId; QPointF pos; bool elite; int levelDelta; int owner; float life; float dmgMul; bool summon; };
+    struct PendingSpawn { int defId; QPointF pos; bool elite; int levelDelta; int owner; float life; float dmgMul; bool summon; int raiserId;
+        PendingSpawn() : defId(-1), elite(false), levelDelta(0), owner(-1), life(0.f), dmgMul(1.f), summon(false), raiserId(-1) {} };
     QVector<PendingSpawn> m_pending;
     struct FogPatch { QPointF pos, vel; float r, alpha; int seed; };
     QVector<FogPatch> m_fog;
