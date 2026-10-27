@@ -1,0 +1,30 @@
+{
+ "cell": 40,
+ "cells": {
+  "deco0": 17,
+  "deco1": 18,
+  "deco2": 19,
+  "deco3": 20,
+  "deco4": 21,
+  "deco5": 22,
+  "floor0": 0,
+  "floor1": 1,
+  "floor2": 2,
+  "floor3": 3,
+  "floor4": 4,
+  "hazard0": 13,
+  "hazard1": 14,
+  "road0": 5,
+  "road1": 6,
+  "road2": 7,
+  "wall0": 8,
+  "wall1": 9,
+  "wall2": 10,
+  "walltop0": 11,
+  "walltop1": 12,
+  "water0": 15,
+  "water1": 16
+ },
+ "cols": 7,
+ "key": "tiles_swamp"
+}
