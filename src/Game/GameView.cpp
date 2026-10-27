@@ -1341,6 +1341,13 @@ void GameView::damageActor(Actor &tgt, float amount, DmgType type, int sourceId,
     const Derived &d = m_game->d();
     bool crit = false;
 
+    // уровни сложности: множители входящего/исходящего урона
+    if (tgt.isPlayer) {
+        amount *= m_game->dmgTakenMul();
+    } else if (isPlayerSource) {
+        amount *= m_game->dmgDealtMul();
+    }
+
     if (tgt.isPlayer) {
         if (tgt.invuln > 0.f || tgt.rollT > 0.f) {
             ftext(tgt.pos + QPointF(0, -44), QStringLiteral("уклон"), C::frost, false, 3, 12.f);
@@ -2912,6 +2919,22 @@ void GameView::ftext(const QPointF &pos, const QString &text, const QColor &c, b
         f.life = f.maxLife = 4.2f;
         f.vx = 0.f;
         f.vy = -6.f;
+        // перенос по словам, чтобы текст влезал в окно над головой
+        QFont fn = fontSmall(int(size));
+        QFontMetrics fm(fn);
+        const int maxW = 300;
+        QStringList words = text.split(' ');
+        QString cur;
+        for (const QString &w : words) {
+            QString tryS = cur.isEmpty() ? w : cur + ' ' + w;
+            if (fm.width(tryS) > maxW && !cur.isEmpty()) {
+                f.lines.append(cur);
+                cur = w;
+            } else {
+                cur = tryS;
+            }
+        }
+        if (!cur.isEmpty()) f.lines.append(cur);
     } else {
         f.life = f.maxLife = kind == 3 ? 1.1f : (crit ? 1.0f : 0.75f);
         f.vx = rng().frange(-24.f, 24.f);
@@ -3418,6 +3441,33 @@ void GameView::debugStep(float dt)
     m_time += dt;
 }
 
+bool GameView::debugTalkToNpc(int npcKind)
+{
+    for (int i = 0; i < m_npcs.size(); ++i) {
+        if (m_npcs[i].kind != npcKind) continue;
+        Actor *p = player();
+        if (!p) return false;
+        p->pos = m_npcs[i].pos + QPointF(20, 0);   // встаём вплотную
+        interact();                                // тот же путь, что и клавиша [F]
+        return true;
+    }
+    return false;
+}
+
+QString GameView::lastNpcLine() const
+{
+    for (int i = m_texts.size() - 1; i >= 0; --i)
+        if (m_texts[i].kind == 5) return m_texts[i].text;
+    return QString();
+}
+
+int GameView::lastNpcLines() const
+{
+    for (int i = m_texts.size() - 1; i >= 0; --i)
+        if (m_texts[i].kind == 5) return qMax(1, int(m_texts[i].lines.size()));
+    return 0;
+}
+
 // ============================================================
 //  МИНИКАРТА
 // ============================================================
@@ -3445,6 +3495,7 @@ void GameView::buildMinimap()
 
 void GameView::renderMinimap(QPainter *p, const QRectF &r)
 {
+    if (!m_minimapOn) return;   // скрыта настройкой «Миникарта» в видео-опциях
     p->save();
     p->setRenderHint(QPainter::Antialiasing, true);
     p->setRenderHint(QPainter::SmoothPixmapTransform, true);
@@ -3863,11 +3914,40 @@ void GameView::renderFrame(QPainter &p)
         float pop = f.crit ? (1.f + 0.42f * qSin((1.f - k) * float(M_PI))) : 1.f;
         QFont fn = f.kind == 3 ? fontSmall(int(f.size) - 1) : fontNum(int(f.size * pop), f.crit);
         p.setFont(fn);
-        p.setPen(QColor(0, 0, 0, 200));
-        QRectF tr(f.pos.x() - 90, f.pos.y() - 20, 180, 26);
-        p.drawText(tr, Qt::AlignCenter, f.text);
-        p.setPen(f.c);
-        p.drawText(tr.translated(-1, -1), Qt::AlignCenter, f.text);
+        QFontMetrics fm(fn);
+        if (f.kind == 5 && !f.lines.isEmpty()) {
+            // реплика NPC: «облачко» по размеру текста, многострочное
+            int lineH = fm.height() + 2;
+            int wMax = 0;
+            for (const QString &s : f.lines) wMax = qMax(wMax, fm.width(s));
+            int bw = wMax + 16, bh = int(f.lines.size()) * lineH + 10;
+            QRectF bub(f.pos.x() - bw / 2.f, f.pos.y() - bh, bw, bh);
+            p.setPen(QColor(0, 0, 0, 170));
+            p.setBrush(QColor(12, 9, 18, 205));
+            p.drawRoundedRect(bub, 6, 6);
+            // хвостик к голове NPC
+            QPainterPath tail;
+            tail.moveTo(f.pos.x() - 5, bub.bottom());
+            tail.lineTo(f.pos.x(), f.pos.y() + 2);
+            tail.lineTo(f.pos.x() + 5, bub.bottom());
+            tail.closeSubpath();
+            p.drawPath(tail);
+            p.setPen(f.c);
+            qreal ty = bub.top() + 5;
+            for (const QString &s : f.lines) {
+                p.drawText(QRectF(bub.left() + 8, ty, wMax, lineH),
+                           Qt::AlignLeft | Qt::AlignVCenter, s);
+                ty += lineH;
+            }
+        } else {
+            // урон/лечение и пр.: окно шире для длинных слов, без элидинга
+            int w = fm.width(f.text);
+            QRectF tr(f.pos.x() - (w + 20) / 2.f, f.pos.y() - 20, w + 20, 26);
+            p.setPen(QColor(0, 0, 0, 200));
+            p.drawText(tr, Qt::AlignCenter, f.text);
+            p.setPen(f.c);
+            p.drawText(tr.translated(-1, -1), Qt::AlignCenter, f.text);
+        }
         p.restore();
     }
 

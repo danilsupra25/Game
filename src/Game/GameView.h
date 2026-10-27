@@ -86,6 +86,11 @@ public:
 
     // служебный метод для автоматических тестов: продвинуть симуляцию на dt секунд
     void debugStep(float dt);
+    // тесты NPC-реплик: телепорт игрока к NPC, выдача случайной фразы, число активных облачков
+    bool debugTalkToNpc(int npcKind);
+    int  debugSpeechCount() const { return m_texts.size(); }
+    QString lastNpcLine() const;          // последняя выданная реплика (для тестов)
+    int  lastNpcLines() const;            // на сколько строк разбита последняя реплика
 
     void renderMinimap(QPainter *p, const QRectF &r);
     void renderTargetInfo(QPainter *p, const QRectF &r);

@@ -197,7 +197,8 @@ struct FText
     float size = 14.f;
     bool crit = false;
     float vx = 0.f, vy = -40.f;
-    int kind = 0;             // 0 урон,1 крит,2 лечение,3 текст,4 опыт
+    int kind = 0;             // 0 урон,1 крит,2 лечение,3 текст,4 опыт,5 реплика NPC
+    QStringList lines;        // для kind==5: заранее перенесённый текст (окно под фразу)
 };
 
 struct Zone

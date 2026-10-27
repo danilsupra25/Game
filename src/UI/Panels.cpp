@@ -1913,7 +1913,7 @@ void PausePanel::paintPanel(QPainter *p, const QRectF &r)
                                       "\xD0\xB2\xD1\x8B\xD1\x81\xD0\xBE\xD0\xBA\xD0\xB8\xD0\xB9" }; // высокий
         static const char *sqn[2] = { "\xD0\xB2\xD1\x8B\xD0\xBA\xD0\xBB",           // выкл
                                       "\xD0\xB2\xD0\xBA\xD0\xBB" };                   // вкл
-        VBtn vb[8];
+        VBtn vb[10];
         vb[0].label = m_shake ? QStringLiteral("Тряска экрана: да") : QStringLiteral("Тряска экрана: нет");
         vb[0].glyph = Gl_Settings; vb[0].act = Act_PauseShake; vb[0].on = m_shake;
         vb[1].label = m_pixel <= 1 ? QStringLiteral("Пиксель-арт: выкл")
@@ -1932,29 +1932,33 @@ void PausePanel::paintPanel(QPainter *p, const QRectF &r)
         vb[6].glyph = Gl_Torch; vb[6].act = Act_VideoLight; vb[6].on = m_lightQ > 0;
         vb[7].label = QStringLiteral("Тени: %1").arg(QString::fromUtf8(sqn[qBound(0, m_shadowQ, 1)]));
         vb[7].glyph = Gl_Ward; vb[7].act = Act_VideoShadow; vb[7].on = m_shadowQ > 0;
+        vb[8].label = m_autoQ ? QStringLiteral("Авто-качество по FPS: вкл") : QStringLiteral("Авто-качество по FPS: выкл");
+        vb[8].glyph = Gl_Star; vb[8].act = Act_VideoAutoQ; vb[8].on = m_autoQ;
+        vb[9].label = m_miniOn ? QStringLiteral("Миникарта: вкл") : QStringLiteral("Миникарта: выкл");
+        vb[9].glyph = Gl_Map; vb[9].act = Act_VideoMinimap; vb[9].on = m_miniOn;
         float y;
         if (ca.width() >= 760) {
-            // широкий экран: две колонки по четыре кнопки, чтобы всё влезло
+            // широкий экран: две колонки по пять кнопок, чтобы всё влезло
             float cw = qMin(430.f, (float(ca.width()) - 100.f) * 0.5f);
             float gapC = 36.f;
             float x0 = ca.left() + (ca.width() - (cw * 2 + gapC)) * 0.5f;
             float y0 = ca.top() + 18;
-            for (int i = 0; i < 8; ++i) {
-                int col = i / 4, row = i % 4;
+            for (int i = 0; i < 10; ++i) {
+                int col = i / 5, row = i % 5;
                 int bi = addButton(QRectF(x0 + col * (cw + gapC), y0 + row * 44, cw, 38),
                                    vb[i].label, vb[i].glyph, vb[i].act);
                 if (bi >= 0) m_buttons[bi].active = vb[i].on;
             }
-            y = y0 + 4 * 44 + 12;
+            y = y0 + 5 * 44 + 12;
         } else {
             float cw = qMin(460.f, float(ca.width()) * 0.66f);
             float cx = ca.left() + (ca.width() - cw) * 0.5f;
             float y0 = ca.top() + 14;
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < 10; ++i) {
                 int bi = addButton(QRectF(cx, y0 + i * 40, cw, 34), vb[i].label, vb[i].glyph, vb[i].act);
                 if (bi >= 0) m_buttons[bi].active = vb[i].on;
             }
-            y = y0 + 8 * 40 + 8;
+            y = y0 + 10 * 40 + 8;
         }
         QStringList info;
         info << QStringLiteral("Свет: высокое - мягкие ореолы факелов; низкое - грубее, но быстрее; выкл - без темноты.");
