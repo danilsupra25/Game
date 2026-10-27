@@ -91,7 +91,7 @@ public:
 
     // ---------- сложность ----------
     enum Diff { D_Easy = 0, D_Medium = 1, D_Hard = 2, D_Doom = 3 };
-    void newGame(const QString &heroName, int classId = 0, int diff = D_Medium);
+    void newGame(const QString &heroName, int classId = 0, int diff = -1);
     int  difficulty() const { return m_diff; }
     static QString diffName(int d);
     static QString diffDesc(int d);
@@ -244,6 +244,7 @@ private:
 
     QString m_hero;
     int     m_class = 0;
+    int     m_diff = 1;                 // сложность: см. enum Diff
     int     m_level = 1;
     float   m_xp = 0.f;
     float   m_hp = 100.f, m_mana = 40.f, m_shield = 0.f;

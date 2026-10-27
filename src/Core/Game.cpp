@@ -13,6 +13,7 @@
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QStandardPaths>
+#include <QSettings>
 #include <QtMath>
 
 namespace aa {
@@ -85,11 +86,20 @@ QStringList Game::allSaves()
 // -------------------------------------------------------------
 //  НОВАЯ ИГРА
 // -------------------------------------------------------------
-void Game::newGame(const QString &heroName, int classId)
+void Game::newGame(const QString &heroName, int classId, int diff)
 {
     Data::ensureLoaded();
     m_hero = heroName.isEmpty() ? QStringLiteral("Безымянный") : heroName;
     m_class = qBound(0, classId, 3);
+    // diff == -1: брать из настроек (TitleScreen их запоминает), иначе явный выбор
+    if (diff < 0) {
+        QSettings st(QStringLiteral("AshAndAmber"), QStringLiteral("AshAndAmber"));
+        m_diff = qBound(0, st.value(QStringLiteral("game/difficulty"), 1).toInt(), 3);
+    } else {
+        m_diff = qBound(0, diff, 3);
+        QSettings st(QStringLiteral("AshAndAmber"), QStringLiteral("AshAndAmber"));
+        st.setValue(QStringLiteral("game/difficulty"), m_diff);
+    }
     m_level = 1;
     m_xp = 0;
     m_gold = 60;
@@ -992,7 +1002,7 @@ float Game::xpProgress() const
 
 void Game::addXp(float v)
 {
-    v *= (1.f + m_d.xpGain);
+    v *= (1.f + m_d.xpGain) * xpMul();
     m_xp += v;
     bool leveled = false;
     while (m_level < 40 && m_xp >= xpForLevel(m_level)) {
@@ -1040,9 +1050,70 @@ void Game::drainShield(float &dmg)
 }
 void Game::addGold(int v)
 {
+    if (v > 0) v = int(v * goldMul() + 0.5f);
     m_gold = qMax(0, m_gold + v);
     if (v > 0) AchTracker::inst().bump(Ach::C_GoldEarned, v);
     emit goldChanged(m_gold);
+}
+
+// -------------------------------------------------------------
+//  СЛОЖНОСТЬ: «Тлеющий уголёк / Пепельный путь / Янтарный жар / Горнило Пустоты»
+// -------------------------------------------------------------
+QString Game::diffName(int d)
+{
+    switch (qBound(0, d, 3)) {
+    case D_Easy:   return QStringLiteral("Тлеющий уголёк");
+    case D_Hard:   return QStringLiteral("Янтарный жар");
+    case D_Doom:   return QStringLiteral("Горнило Пустоты");
+    default:       return QStringLiteral("Пепельный путь");
+    }
+}
+
+QString Game::diffDesc(int d)
+{
+    switch (qBound(0, d, 3)) {
+    case D_Easy:   return QStringLiteral("Враги слабее, урона меньше, опыт и золото щедрее. Для тех, кто только ступил в пепел.");
+    case D_Hard:   return QStringLiteral("Враги злее и больнее бьют, но добыча и опыт щедрые. Испытание для бывалых.");
+    case D_Doom:   return QStringLiteral("Максимальная жестокость и одна жизнь: гибель навсегда стирает сохранение.");
+    default:       return QStringLiteral("Честный баланс задумки. Так автор и планировал.");
+    }
+}
+
+float Game::dmgTakenMul() const
+{
+    switch (m_diff) {
+    case D_Easy: return 0.72f;
+    case D_Hard: return 1.40f;
+    case D_Doom: return 1.65f;
+    default:     return 1.00f;
+    }
+}
+float Game::dmgDealtMul() const
+{
+    switch (m_diff) {
+    case D_Easy: return 1.15f;
+    case D_Hard: return 0.92f;
+    case D_Doom: return 0.88f;
+    default:     return 1.00f;
+    }
+}
+float Game::xpMul() const
+{
+    switch (m_diff) {
+    case D_Easy: return 1.25f;
+    case D_Hard: return 1.15f;
+    case D_Doom: return 1.15f;
+    default:     return 1.00f;
+    }
+}
+float Game::goldMul() const
+{
+    switch (m_diff) {
+    case D_Easy: return 1.20f;
+    case D_Hard: return 1.10f;
+    case D_Doom: return 1.10f;
+    default:     return 1.00f;
+    }
 }
 void Game::registerKill() { ++m_kills; }
 
@@ -1259,6 +1330,7 @@ QJsonObject Game::toJson() const
     o[QStringLiteral("ver")] = 3;
     o[QStringLiteral("hero")] = m_hero;
     o[QStringLiteral("cls")] = m_class;
+    o[QStringLiteral("diff")] = m_diff;
     o[QStringLiteral("lvl")] = m_level;
     o[QStringLiteral("xp")] = double(m_xp);
     o[QStringLiteral("hp")] = double(m_hp);
@@ -1314,6 +1386,7 @@ bool Game::fromJson(const QJsonObject &o)
     if (!o.contains(QStringLiteral("hero"))) return false;
     m_hero = o.value(QStringLiteral("hero")).toString();
     m_class = o.value(QStringLiteral("cls")).toInt(0);
+    m_diff = qBound(0, o.value(QStringLiteral("diff")).toInt(1), 3);
     m_level = qMax(1, o.value(QStringLiteral("lvl")).toInt(1));
     m_xp = float(o.value(QStringLiteral("xp")).toDouble());
     m_gold = o.value(QStringLiteral("gold")).toInt();
