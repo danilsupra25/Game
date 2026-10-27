@@ -83,12 +83,23 @@ public:
     explicit Game(QObject *parent = 0);
 
     // ---------- жизненный цикл ----------
-    void newGame(const QString &heroName, int classId = 0);
     bool saveGame(const QString &path = QString());
     bool loadGame(const QString &path = QString());
     static QString defaultSavePath();
     static bool saveExists(const QString &path = QString());
     static QStringList allSaves();
+
+    // ---------- сложность ----------
+    enum Diff { D_Easy = 0, D_Medium = 1, D_Hard = 2, D_Doom = 3 };
+    void newGame(const QString &heroName, int classId = 0, int diff = D_Medium);
+    int  difficulty() const { return m_diff; }
+    static QString diffName(int d);
+    static QString diffDesc(int d);
+    float dmgTakenMul() const;    // во сколько раз больнее получать
+    float dmgDealtMul() const;    // во сколько больше наносить
+    float xpMul() const;          // множитель опыта
+    float goldMul() const;        // множитель золота
+    bool  doomPermadeath() const { return m_diff == D_Doom; }
 
     // ---------- персонаж ----------
     QString heroName() const { return m_hero; }

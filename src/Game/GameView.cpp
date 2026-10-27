@@ -33,6 +33,59 @@ static inline float distf(const QPointF &a, const QPointF &b)
     float dx = float(a.x() - b.x()), dy = float(a.y() - b.y());
     return qSqrt(dx * dx + dy * dy);
 }
+
+// ---- наборы реплик NPC (выдаются случайно, без повтора подряд) ----
+static const QStringList &npcLines(int kind)
+{
+    static const QStringList kMerchant = {
+        QStringLiteral("Есть товар - найдётся и золото."),
+        QStringLiteral("Ты пахнешь пеплом. Это мой лучший аромат - значит, клиент живой."),
+        QStringLiteral("Не спрашивай, откуда хлам. Спрашивай, почём."),
+        QStringLiteral("После набега цены кусаются... но я всегда иду навстречу."),
+        QStringLiteral("Монеты в кармане жгут? Отдай мне - станет легче."),
+        QStringLiteral("Лучшая сделка та, о которой не знает кузнец."),
+        QStringLiteral("Смотрю, ты снова не умер. Респект. Кошелёк тоже цел?"),
+        QStringLiteral("Бери сейчас: завтра это утащат крысы. Большие и злые."),
+    };
+    static const QStringList kSmith = {
+        QStringLiteral("Могу выжечь из тебя старые ошибки."),
+        QStringLiteral("Молот не спорит. Молот объясняет."),
+        QStringLiteral("Держи крепче. Если отскочит - не моя вина, а твоя удача."),
+        QStringLiteral("Сталь помнит каждый удар. Пусть помнит правильно."),
+        QStringLiteral("Принесёшь рваный клинок - уйдёт целым. Почти."),
+        QStringLiteral("Уголь в горне, искры в глазах - вот и весь секрет ремесла."),
+        QStringLiteral("Хочешь острое? Будет острое. Хочешь злое? Принеси железа побольше."),
+        QStringLiteral("Я не чинлю характер. Только оружие. Характер - за отдельную плату."),
+    };
+    static const QStringList kHealer = {
+        QStringLiteral("Дай руку. Дыши ровно."),
+        QStringLiteral("Не дёргайся. Я и сама не знаю, что будет дальше."),
+        QStringLiteral("Раны заживают. Привычка лезть под когти - нет."),
+        QStringLiteral("Глоток отвара - и ты почти как новый. Ну, почти."),
+        QStringLiteral("Скажи «аа»... Ладно, не надо. Просто стой смирно."),
+        QStringLiteral("Я лечу всех. Даже тех, кто этого не заслуживает. Особенно их."),
+        QStringLiteral("Кровь - глупая жидкость. Стоит ей кончиться, и ты становишься умнее."),
+        QStringLiteral("В следующий раз принеси щит, а не оправдания."),
+    };
+    static const QStringList kElder = {
+        QStringLiteral("Пепел помнит всех, кто прошёл. Присядь у огня."),
+        QStringLiteral("Когда-то этот город горел ярко. Теперь он тлеет - как и его жители."),
+        QStringLiteral("Янтарь - это застывший свет. Свет, который отказался умирать."),
+        QStringLiteral("Не бойся мертвых. Бойся живых, которым нечего терять."),
+        QStringLiteral("Жрецы Морпри говорят, что смерть - лишь дверь. Они правы. Но забывают про то, что по ту сторону."),
+        QStringLiteral("Каждый уголёк в этом костре - чья-то история. Слушай внимательнее."),
+        QStringLiteral("Ты пришёл сюда за силой. Сила придёт за тобой."),
+        QStringLiteral("Старые боги уснули. Молодые ещё не родились. Мы живём в их паузе."),
+        QStringLiteral("Если увидишь глаза в темноте - не моргай первым."),
+        QStringLiteral("Пепел не врёт. Пепел просто всё уже видел."),
+    };
+    switch (kind) {
+    case 0: return kMerchant;
+    case 1: return kSmith;
+    case 2: return kHealer;
+    default: return kElder;
+    }
+}
 static inline QPointF normv(const QPointF &v)
 {
     float l = float(qSqrt(v.x() * v.x() + v.y() * v.y()));
@@ -160,10 +213,8 @@ void GameView::loadLocation(int locId)
                             : (i == 1 ? QStringLiteral("Кузнец Уголь")
                                : (i == 2 ? QStringLiteral("Целительница Ива")
                                   : QStringLiteral("Старейшина Пепел")));
-            n.line = i == 0 ? QStringLiteral("Есть товар - найдётся и золото.")
-                            : (i == 1 ? QStringLiteral("Могу выжечь из тебя старые ошибки.")
-                               : (i == 2 ? QStringLiteral("Дай руку. Дыши ровно.")
-                                  : QStringLiteral("Пепел помнит всех, кто прошёл. Присядь у огня.")));
+            n.lines = npcLines(i);
+            n.line = n.lines.at(0);   // первая фраза - «каноническая», при [F] выдаётся случайная
             n.tint = i;
             m_npcs.append(n);
         }
@@ -1907,20 +1958,51 @@ void GameView::updateEnemies(float dt)
             if (dd < 260.f) moveActor(a, -toP * spd * dt);
             else if (dd > 420.f || hunting) moveActor(a, toP * spd * dt);
             a.summonTimer -= dt;
-            if (a.atkTimer <= 0.f && (dd < a.atkRange || hunting)) {
+            // жрец-некромант: не забрасывает стрелбами, а поднимает свежих мертвецов;
+            // выстрел - лишь редкая "прожарка" с расстояния (урон снижен реворком дефа)
+            if (a.atkTimer <= 0.f && dd < 340.f && dd > a.radius * 3.f && rng().chance(0.5f)) {
                 a.atkTimer = a.atkCd;
                 a.attackAnim = 1.f;
-                a.attackKind = 2;   // лист существа: «shoot»
+                a.attackKind = 1;   // лист существа: «cast»
                 ++a.attackSeq;
                 fireProjectile(a.pos + toP * a.radius, toP, rng().frange(a.dmgMin, a.dmgMax), a.dmgType,
                                a.id, true, a.dmgType == Dmg_Arcane ? 5 : 4, a.projSpeed, 7.f, 0, 0,
                                dmgTypeColor(a.dmgType), 1.1f, false, 0, 0.f, a.dmgMax * 0.25f, Gl_None);
             }
-            if (a.summonTimer <= 0.f && a.summonId >= 0) {
+            if (a.summonTimer <= 0.f) {
+                // лимит "своих" прислужников жреца
                 int alive = 0;
                 for (int k = 0; k < m_actors.size(); ++k)
                     if (!m_actors[k].dead && !m_actors[k].isPlayer && m_actors[k].owner == a.id) ++alive;
-                if (alive < 5) {
+                bool raised = false;
+                if (alive < 3) {
+                    // ищем ближайший свежий труп обычного моба (не босса, не прислужника)
+                    int best = -1; float bd = 300.f;
+                    for (int k = 0; k < m_actors.size(); ++k) {
+                        const Actor &c = m_actors[k];
+                        if (!c.dead || c.isPlayer || c.isSummon || c.elite || c.boss) continue;
+                        if (c.deathT > 0.5f) continue;      // труп ещё "тёплый"
+                        float d2 = distf(a.pos, c.pos);
+                        if (d2 < bd) { bd = d2; best = k; }
+                    }
+                    if (best >= 0) {
+                        const Actor corpse = m_actors.at(best);
+                        PendingSpawn ps;
+                        ps.summon = true;         // поднят жрецом: будет драться с его хозяевами
+                        ps.defId = corpse.defId;  // воскрешаем того же моба
+                        ps.pos = corpse.pos;
+                        ps.elite = false;
+                        ps.levelDelta = 0;
+                        ps.raiserId = a.id;
+                        m_pending.append(ps);
+                        ring(corpse.pos, 16, C::arcane, 48.f);
+                        burst(corpse.pos, 10, C::arcane, 2, 90, 3.f, 0.9f);
+                        ftext(corpse.pos + QPointF(0, -30), QStringLiteral("восстань!"), C::arcane, false, 3, 12.f);
+                        raised = true;
+                    }
+                }
+                if (!raised && a.summonId >= 0 && alive < 4) {
+                    // трупов рядом нет - зовёт служителя из бездны
                     for (int s = 0; s < a.summonCount; ++s) {
                         PendingSpawn ps;
                         ps.summon = false;
@@ -1931,12 +2013,15 @@ void GameView::updateEnemies(float dt)
                         m_pending.append(ps);
                     }
                     ring(a.pos, 18, dmgTypeColor(a.dmgType), 54.f);
+                    raised = true;
+                }
+                if (raised) {
                     Audio::inst().play(Sfx_Cast);
                     a.attackAnim = 1.f;
-                    a.attackKind = 1;
-                    spawnAttackFx(a.pos, 0.f, 5, dmgTypeColor(a.dmgType), a.radius * 2.8f, 0.6f);
+                    a.attackKind = 4;   // собственная анимация «raise»: посох вниз, рука из земли
+                    spawnAttackFx(a.pos, 0.f, 5, C::arcane, a.radius * 2.8f, 0.6f);
                 }
-                a.summonTimer = 7.f;
+                a.summonTimer = raised ? 5.5f : 2.5f;   // неудачная попытка - быстро оглядеться снова
             }
             break;
         }
@@ -2805,9 +2890,16 @@ void GameView::ftext(const QPointF &pos, const QString &text, const QColor &c, b
     f.crit = crit;
     f.kind = kind;
     f.size = size;
-    f.life = f.maxLife = kind == 3 ? 1.1f : (crit ? 1.0f : 0.75f);
-    f.vx = rng().frange(-24.f, 24.f);
-    f.vy = -58.f - (crit ? 26.f : 0.f);
+    if (kind == 5) {
+        // длинная реплика NPC: дольше живёт, почти не дрейфует
+        f.life = f.maxLife = 4.2f;
+        f.vx = 0.f;
+        f.vy = -6.f;
+    } else {
+        f.life = f.maxLife = kind == 3 ? 1.1f : (crit ? 1.0f : 0.75f);
+        f.vx = rng().frange(-24.f, 24.f);
+        f.vy = -58.f - (crit ? 26.f : 0.f);
+    }
     m_texts.append(f);
 }
 
@@ -2950,12 +3042,20 @@ void GameView::interact()
     if (!p || m_playerDead) return;
     if (m_nearNpc) {
         Audio::inst().play(Sfx_Ui);
-        if (m_nearNpc->kind == 0) emit requestShop();
-        else if (m_nearNpc->kind == 1) emit requestRespec();
-        else if (m_nearNpc->kind == 3) {
-            // старейшина: только разговор - кусочек лора над головой
-            ftext(m_nearNpc->pos + QPointF(0, -74), m_nearNpc->line, C::amber, false, 4, 13.f);
-        } else emit requestHeal();
+        // любой NPC при разговоре выдаёт случайную реплику (без повтора подряд)
+        Npc &npc = *m_nearNpc;
+        if (!npc.lines.isEmpty()) {
+            int idx = rng().pick(npc.lines.size());
+            if (idx == npc.lastLine) idx = (idx + 1) % npc.lines.size();
+            npc.lastLine = idx;
+            npc.line = npc.lines.at(idx);
+        }
+        ftext(npc.pos + QPointF(0, -74), npc.line, C::amber, false, 5, 12.5f);
+        if (npc.kind == 0) emit requestShop();
+        else if (npc.kind == 1) emit requestRespec();
+        else if (npc.kind != 2 && npc.kind != 3) { /* нет обработчика */ }
+        else if (npc.kind == 3) { /* старейшина: только разговор */ }
+        else emit requestHeal();
         return;
     }
     if (m_nearPortal) {

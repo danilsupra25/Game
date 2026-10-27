@@ -251,7 +251,9 @@ struct Npc
     QPointF pos;
     int kind = 0;             // 0 торговец,1 кузнец,2 целитель,3 старейшина
     QString name;
-    QString line;
+    QString line;             // текущая (последняя сказанная) фраза
+    QStringList lines;        // набор фраз для рандомной выдачи
+    int lastLine = -1;        // чтобы не повторять одну и ту же подряд
     float animT = 0.f;
     int tint = 0;
 };

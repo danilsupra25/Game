@@ -797,6 +797,7 @@ void drawPlayer(QPainter *p, const Actor &a, float t, int classId, int weaponGly
                 if (a.attackKind == 1)      an = QStringLiteral("cast");
                 else if (a.attackKind == 2) an = QStringLiteral("shoot");
                 else if (a.attackKind == 3) an = QStringLiteral("attack2");
+                else if (a.attackKind == 4) an = QStringLiteral("raise");   // подъём трупа жрецом морока
                 else an = (a.attackSeq & 1) ? QStringLiteral("attack2") : QStringLiteral("attack");
                 if (!sh->anims.contains(an)) an = QStringLiteral("attack");
                 prog = 1.f - a.attackAnim;
@@ -1161,6 +1162,7 @@ void drawActor(QPainter *p, const Actor &a, float time)
                 if (a.attackKind == 1)       an = QStringLiteral("cast");
                 else if (a.attackKind == 2)  an = QStringLiteral("shoot");
                 else if (a.attackKind == 3)  an = QStringLiteral("attack2");
+                else if (a.attackKind == 4)  an = QStringLiteral("raise");   // подъём трупа жрецом морока
                 else an = (a.attackSeq & 1) ? QStringLiteral("attack2") : QStringLiteral("attack");
                 if (!sh->anims.contains(an)) an = QStringLiteral("attack");
                 prog = 1.f - a.attackAnim;
