@@ -774,6 +774,33 @@ QString Audio::assetsReport() const
 #endif
 }
 
+bool Audio::musicPlaying() const
+{
+#ifdef HAVE_AUDIO
+    return m_musicOn;
+#else
+    return false;
+#endif
+}
+
+bool Audio::musicIsWav() const
+{
+#ifdef HAVE_AUDIO
+    return m_musicWav;
+#else
+    return false;
+#endif
+}
+
+QString Audio::currentMusic() const
+{
+#ifdef HAVE_AUDIO
+    return m_musicFile;
+#else
+    return QString();
+#endif
+}
+
 QString Audio::musicFile(int which) const
 {
     if (which == 1) {   // меню
@@ -867,7 +894,7 @@ void Audio::startMusic(int which)
     m_musicOn = true;
     m_musicFile = f;
 #else
-    Q_UNUSED(menu);
+    Q_UNUSED(which);
 #endif
 }
 

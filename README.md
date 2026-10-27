@@ -6,7 +6,7 @@ Action-RPG в духе классических «дьяблоидов», нап
 (синтез PCM на лету) и весь контент генерируются кодом.
 
 ```
-qmake AshAndAmber.pro && make && ./AshAndAmber
+mkdir -p build && cd build && qmake ../project/AshAndAmber.pro && make && ./AshAndAmber
 ```
 
 ---
@@ -288,20 +288,20 @@ qmake AshAndAmber.pro && make && ./AshAndAmber
 
 **Linux**
 ```bash
-qmake AshAndAmber.pro
+mkdir -p build && cd build && qmake ../project/AshAndAmber.pro
 make -j4
 ./AshAndAmber
 ```
 
 **Windows (MinGW)**
 ```bat
-qmake AshAndAmber.pro
+mkdir -p build && cd build && qmake ../project/AshAndAmber.pro
 mingw32-make
 ```
 
 **Windows (MSVC)** — из «Командной строки разработчика»:
 ```bat
-qmake AshAndAmber.pro
+mkdir -p build && cd build && qmake ../project/AshAndAmber.pro
 nmake          (или jom)
 ```
 Исходники в UTF-8; для MSVC флаг `/utf-8` уже добавлен в `.pro`.
@@ -312,9 +312,9 @@ nmake          (или jom)
 ## Автоматические проверки
 
 ```bash
-qmake smoke.pro && make && ./smoke      # headless-прогон: таблицы, генерация, лут, сейвы, паутина,
+cd build && qmake ../project/smoke.pro && make && ./smoke      # headless-прогон: таблицы, генерация, лут, сейвы, паутина,
                                         # полный проход всех 33 локаций, боссы, смерть/возрождение
-qmake shots.pro && make && ./shottool ../shots   # рендер скриншотов интерфейса и боя в PNG
+cd build && qmake ../project/shots.pro && make && ./shottool ../shots   # рендер скриншотов интерфейса и боя в PNG
 ```
 Готовые скриншоты — в папке `shots/`: интерфейс (`05_inventory`, `15_keys`, `24_settings_video` —
 вкладка «Видео» со светом и тенями) и боевые сцены (`26_mobs_l01`, `29_fx_slash`…`31_fx_archer` —
@@ -324,6 +324,8 @@ qmake shots.pro && make && ./shottool ../shots   # рендер скриншот
 ## Структура
 
 ```
+project/     AshAndAmber.pro (основной билд), smoke.pro / shots.pro / bench.pro,
+             sprites.qrc — сборка из отдельной папки: mkdir build && cd build && qmake ../project/AshAndAmber.pro
 src/Core/    Types, Rng, Data (весь контент), Game (состояние/лут/паутина/сейвы),
              Style (палитра, панели, ~120 векторных иконок), Audio (синтез SFX)
 src/World/   Dungeon — генератор арен и кэш-текстура земли (запеканка тайлсетов)
@@ -332,5 +334,11 @@ src/Game/    Actors (сущности), Sprites (процедурные суще
              GameView (цикл, бой, ИИ, боссы, свет, камера, миникарта)
 src/UI/      Hud, Tooltip, Panels (инвентарь/паутина/карта/лавка/пауза/смерть/журнал/справка/меню),
              MainWindow
-tests/       smoke.cpp, shots.cpp
+assets/      sprites/ и tiles/ — опциональные внешние спрайт-листы и тайлсеты (PNG+JSON);
+             игра подхватывает их рядом с exe или в текущей папке
+tools/       Python-генераторы спрайт-листов и тайлсетов (make_*.py, slice_sheet.py)
+tests/       smoke.cpp, shots.cpp, bench.cpp, sprcheck.cpp
+docs/        документация (SPRITES.md и др.)
+build/       артефакты сборки (в .gitignore — не коммитить)
 ```
+
