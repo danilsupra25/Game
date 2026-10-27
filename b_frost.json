@@ -1,0 +1,30 @@
+{
+ "key": "b_frost",
+ "frameW": 96,
+ "frameH": 96,
+ "anchorX": 48,
+ "anchorY": 84,
+ "fps": 7,
+ "anims": {
+  "idle": [
+   0,
+   3
+  ],
+  "walk": [
+   4,
+   7
+  ],
+  "attack": [
+   8,
+   11
+  ],
+  "cast": [
+   12,
+   15
+  ],
+  "death": [
+   16,
+   19
+  ]
+ }
+}

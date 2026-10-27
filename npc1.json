@@ -1,0 +1,14 @@
+{
+ "key": "npc1",
+ "frameW": 64,
+ "frameH": 64,
+ "anchorX": 32,
+ "anchorY": 54,
+ "fps": 3,
+ "anims": {
+  "idle": [
+   0,
+   3
+  ]
+ }
+}

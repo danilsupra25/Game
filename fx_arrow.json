@@ -1,0 +1,14 @@
+{
+ "key": "fx_arrow",
+ "frameW": 64,
+ "frameH": 64,
+ "anchorX": 32,
+ "anchorY": 32,
+ "fps": 16,
+ "anims": {
+  "loop": [
+   0,
+   3
+  ]
+ }
+}

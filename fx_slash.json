@@ -1,0 +1,22 @@
+{
+ "key": "fx_slash",
+ "frameW": 96,
+ "frameH": 96,
+ "anchorX": 48,
+ "anchorY": 48,
+ "fps": 18,
+ "anims": {
+  "slash": [
+   0,
+   5
+  ],
+  "cleave": [
+   6,
+   11
+  ],
+  "thrust": [
+   12,
+   16
+  ]
+ }
+}

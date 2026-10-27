@@ -1,0 +1,26 @@
+{
+ "key": "e_thornp",
+ "frameW": 64,
+ "frameH": 64,
+ "anchorX": 32,
+ "anchorY": 54,
+ "fps": 8,
+ "anims": {
+  "idle": [
+   0,
+   3
+  ],
+  "walk": [
+   4,
+   7
+  ],
+  "cast": [
+   8,
+   11
+  ],
+  "death": [
+   12,
+   15
+  ]
+ }
+}

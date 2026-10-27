@@ -1,0 +1,42 @@
+{
+ "key": "player",
+ "frameW": 64,
+ "frameH": 64,
+ "anchorX": 32,
+ "anchorY": 54,
+ "fps": 12,
+ "anims": {
+  "idle": [
+   0,
+   3
+  ],
+  "walk": [
+   4,
+   9
+  ],
+  "attack": [
+   10,
+   15
+  ],
+  "attack2": [
+   16,
+   21
+  ],
+  "cast": [
+   22,
+   26
+  ],
+  "shoot": [
+   27,
+   30
+  ],
+  "roll": [
+   31,
+   34
+  ],
+  "death": [
+   35,
+   39
+  ]
+ }
+}

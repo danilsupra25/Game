@@ -1,0 +1,34 @@
+{
+ "key": "b_ash",
+ "frameW": 96,
+ "frameH": 96,
+ "anchorX": 48,
+ "anchorY": 84,
+ "fps": 7,
+ "anims": {
+  "idle": [
+   0,
+   3
+  ],
+  "walk": [
+   4,
+   7
+  ],
+  "attack": [
+   8,
+   11
+  ],
+  "attack2": [
+   12,
+   15
+  ],
+  "cast": [
+   16,
+   19
+  ],
+  "death": [
+   20,
+   23
+  ]
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "key": "e_treant",
+ "frameW": 64,
+ "frameH": 64,
+ "anchorX": 32,
+ "anchorY": 54,
+ "fps": 8,
+ "anims": {
+  "idle": [
+   0,
+   3
+  ],
+  "walk": [
+   4,
+   7
+  ],
+  "attack": [
+   8,
+   11
+  ],
+  "attack2": [
+   12,
+   15
+  ],
+  "death": [
+   16,
+   19
+  ]
+ }
+}

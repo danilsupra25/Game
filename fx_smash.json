@@ -1,0 +1,14 @@
+{
+ "key": "fx_smash",
+ "frameW": 96,
+ "frameH": 96,
+ "anchorX": 48,
+ "anchorY": 48,
+ "fps": 16,
+ "anims": {
+  "smash": [
+   0,
+   5
+  ]
+ }
+}
