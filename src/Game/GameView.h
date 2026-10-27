@@ -51,6 +51,12 @@ public:
     // тени: 0 выкл, 1 мягкие контактные пятна под существами и предметами
     void setShadowQ(int q);
     int  shadowQ() const { return m_shadowQ; }
+    // авто-подстройка качества эффектов при просадке FPS (настройка видео)
+    void setAutoQuality(bool on) { m_autoQuality = on; }
+    bool autoQuality() const { return m_autoQuality; }
+    // миникарта в HUD (настройка видео)
+    void setMinimapVisible(bool on) { m_minimapOn = on; }
+    bool minimapVisible() const { return m_minimapOn; }
 
     Game *game() const { return m_game; }
     const Dungeon &dungeon() const { return m_dun; }
@@ -350,6 +356,8 @@ private:
     float m_fpsAcc = 0.f;
     int m_fpsCount = 0;
     int m_quality = 1;        // 1 полное, 0 облегчённое (авто)
+    bool m_autoQuality = true;   // разрешена ли авто-подстройка качества по FPS
+    bool m_minimapOn = true;     // показывать миникарту в HUD
     float m_lowFpsT = 0.f;    // сколько секунд FPS держится низким
     float m_hiFpsT = 0.f;     // сколько секунд FPS с запасом
     float m_hitStop = 0.f;    // микро-пауза на критах

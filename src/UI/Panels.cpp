@@ -49,6 +49,7 @@ enum PanelAction {
     Act_PauseTabSound = 513, Act_PauseTabVideo = 514, Act_PauseTabKeys = 515, Act_PauseBack = 516,
     Act_VideoPixel = 517, Act_VideoScan = 518, Act_VideoGl = 519, Act_VideoSprites = 520,
     Act_VideoLight = 521, Act_VideoShadow = 522,
+    Act_VideoAutoQ = 523, Act_VideoMinimap = 524,
     // смерть
     Act_DeathRespawn = 600, Act_DeathQuit,
     // лог/справка

@@ -1070,6 +1070,14 @@ void drawActor(QPainter *p, const Actor &a, float time)
 {
     if (a.radius <= 0.5f) return;
     Pal c = palFor(a.tint);
+    if (a.raisedByPriest) {
+        // «восставший» жрецом из трупа: фиолетово-гробовая палитра поверх обычной
+        c.main   = QColor(120, 84, 160);
+        c.dark   = QColor(40, 26, 60);
+        c.light  = QColor(176, 140, 220);
+        c.accent = QColor(200, 140, 255);
+        c.eye    = QColor(230, 190, 255);
+    }
     int arch = archFor(a.tint);
 
     p->save();

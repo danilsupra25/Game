@@ -128,6 +128,7 @@ struct Actor
     int tint = 0;
     int glyph = 0;
     int lastHitType = 0;
+    bool raisedByPriest = false;   // восставший жрецом из трупа слуга (фиолетовая аура)
     QString nameOverride;
 };
 

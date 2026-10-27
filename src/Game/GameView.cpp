@@ -482,7 +482,8 @@ void GameView::onFrame()
 
     // авто-облегчение эффектов: при стойкой просадке кадров отключаем крону/следы/лучи
     // и грубее считаем свет; когда запас кадров появился - возвращаем обратно
-    if (m_fps > 1.f) {
+    if (!m_autoQuality) { m_quality = 1; m_lowFpsT = m_hiFpsT = 0.f; }
+    if (m_autoQuality && m_fps > 1.f) {
         if (m_quality == 1) {
             if (m_fps < 45.f) m_lowFpsT += dt; else m_lowFpsT = 0.f;
             if (m_lowFpsT > 2.5f) {
@@ -537,9 +538,9 @@ void GameView::updateSim(float dt)
                         if (m_actors[k].id == ps.raiserId && !m_actors[k].dead) { raiserOwner = m_actors[k].owner; ok = true; break; }
                     spawnSummon(ps.defId, ps.pos, ok ? raiserOwner : -1, 12.f, ok ? 0.8f : 0.7f);
                     if (!m_actors.isEmpty()) {
-                        // перекрашиваем слугу в «восставшего» (фиолетовый оттенок)
+                        // помечаем слугу как «восставшего» из трупов — фиолетовая аура при отрисовке
                         Actor &s = m_actors[m_actors.size() - 1];
-                        s.tint = QColor(150, 90, 200).darker(120);
+                        s.raisedByPriest = true;
                     }
                 } else {
                     spawnSummon(ps.defId, ps.pos, ps.owner, ps.life, ps.dmgMul);
