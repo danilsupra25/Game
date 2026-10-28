@@ -2451,21 +2451,52 @@ QString TitleScreen::diffName(int i) const
 QString TitleScreen::diffDesc(int i) const
 {
     switch (i) {
-    case 0:  return QString::fromUtf8("Враги слабее, опыта и золота больше. Путешествие для отдыха.");
-    case 1:  return QString::fromUtf8("Задуманный баланс. Так задумано.");
-    case 2:  return QString::fromUtf8("Враги злее и крепче, опыт меньше. Пепел любит смелых.");
-    default: return QString::fromUtf8("Одна жизнь. Смерть стирает сохранение. Удачи.");
+    case 0:  return QString::fromUtf8("Путешествие для отдыха.");
+    case 1:  return QString::fromUtf8("Так задумано. Задуманный баланс.");
+    case 2:  return QString::fromUtf8("Пепел любит смелых.");
+    default: return QString::fromUtf8("Одна жизнь. Смерть стирает сохранение.");
     }
 }
 
-QRectF TitleScreen::diffRect(int i) const
+QStringList TitleScreen::diffBullets(int i) const
 {
-    // строка из 4 кнопок над полем имени
-    float bw = qMin(210.f, (float(width()) - 70.f) / 4.f);
-    float totalW = bw * 4 + 10.f * 3;
-    float x0 = (float(width()) - totalW) * 0.5f;
-    float y = float(height()) - 156.f;   // поле имени на -118, кнопки выше
-    return QRectF(x0 + float(i) * (bw + 10.f), y, bw, 30.f);
+    QStringList l;
+    switch (i) {
+    case 0:
+        l << QStringLiteral("Враги бьют на 25% слабее и получают +40% урона")
+          << QStringLiteral("Опыт и золото x1.25");
+        break;
+    case 1:
+        l << QStringLiteral("Урон, опыт и золото - как задумано")
+          << QStringLiteral("Смерть отбрасывает к истокам без потери героя");
+        break;
+    case 2:
+        l << QStringLiteral("Враги злее (+35% урона) и крепче (+20% здоровья)")
+          << QStringLiteral("Опыт и золото x0.85");
+        break;
+    default:
+        l << QStringLiteral("Враги смертоносны: +60% урона, +35% здоровья")
+          << QStringLiteral("Опыт и золото x0.7 · смерть стирает сохранение");
+        break;
+    }
+    return l;
+}
+
+// блок сложности: горизонтальная полоса над полем имени
+QRectF TitleScreen::diffRowRect() const
+{
+    float w = qMin(660.f, float(width()) - 60.f);
+    float x = (float(width()) - w) * 0.5f;
+    float y = float(height()) - 216.f;   // поле имени на -118, ниже резерв под подпись
+    return QRectF(x, y, w, 92.f);
+}
+
+QRectF TitleScreen::diffTabRect(int i) const
+{
+    QRectF row = diffRowRect();
+    float gap = 8.f;
+    float tw = (row.width() - gap * 3.f) / 4.f;
+    return QRectF(row.left() + float(i) * (tw + gap), row.top(), tw, 34.f);
 }
 
 void TitleScreen::rollRandomName()
@@ -2512,7 +2543,7 @@ QRectF TitleScreen::buttonRect(int i) const
             float totalW = cw * 4 + 12 * 3;
             float x0 = (float(width()) - totalW) * 0.5f;
             float top = float(height()) * 0.16f + 62.f;
-            float bottom = float(height()) - 152.f;
+            float bottom = float(height()) - 236.f;
             float cardH = qBound(150.f, bottom - top, 430.f);
             float cardTop = top + qMax(0.f, (bottom - top - cardH) * 0.5f);
             return QRectF(x0 + float(i) * (cw + 12), cardTop, cw, cardH);
@@ -2732,19 +2763,38 @@ void TitleScreen::paintEvent(QPaintEvent *)
         QRectF dr = nameDiceRect();
         bool dhov = dr.contains(m_mouse);
         Style::button(&p, dr, QString(), dhov, false, true, Gl_Star, dhov ? 1.f : 0.f, false);
-        // --- выбор сложности ---
+
+        // --- выбор сложности: аккуратный блок над полем имени ---
         static const QColor dCol[4] = { QColor(90, 170, 110), C::bone, QColor(235, 150, 60), QColor(200, 60, 60) };
+        QRectF row = diffRowRect();
+        Style::panel(&p, row, 1, 0.85f);
+        Style::textShadow(&p, QRectF(row.left() + 14, row.top() + 8, row.width() - 28, 16),
+                          QStringLiteral("С Л О Ж Н О С Т Ь"), C::boneDim, fontSmall(9), Qt::AlignLeft);
         for (int i = 0; i < 4; ++i) {
-            QRectF r = diffRect(i);
+            QRectF r = diffTabRect(i);
+            r.moveTop(row.top() + 28.f);
             bool sel = (m_diff == i);
             bool hov = r.contains(m_mouse);
-            Style::button(&p, r, diffName(i), hov, sel, true, Gl_None, sel ? 1.f : (hov ? 0.6f : 0.f), false);
-            if (sel)
-                Style::textShadow(&p, QRectF(r.left() - 6, r.bottom() + 2, r.width() + 12, 14),
-                                  diffDesc(i), dCol[i].lighter(120), fontSmall(9), Qt::AlignCenter);
+            QColor cc = dCol[i];
+            p.setPen(QPen(sel ? cc : (hov ? cc.darker(140) : C::edge.darker(140)), sel ? 2.0 : 1.2));
+            p.setBrush(sel ? QColor(cc.red(), cc.green(), cc.blue(), 46)
+                           : (hov ? QColor(255, 255, 255, 14) : QColor(10, 8, 16, 120)));
+            p.drawRoundedRect(r, 6, 6);
+            Style::textShadow(&p, r, diffName(i), sel ? cc.lighter(125) : (hov ? C::bone : C::boneDim),
+                              fontSmall(10), Qt::AlignCenter);
         }
-        if (height() >= 560)
-            Style::textShadow(&p, QRectF(0, nr.top() - 28, width(), 22),
+        // описание выбранной сложности
+        QColor dc = dCol[qBound(0, m_diff, 3)];
+        QStringList bl = diffBullets(m_diff);
+        float ty = row.bottom() + 4.f;
+        Style::textShadow(&p, QRectF(row.left(), ty, row.width(), 15),
+                          QStringLiteral("%1 — %2").arg(diffName(m_diff), diffDesc(m_diff)),
+                          dc.lighter(120), fontSmall(10), Qt::AlignCenter);
+        Style::textShadow(&p, QRectF(row.left(), ty + 16.f, row.width(), 14),
+                          bl.join(QStringLiteral("  ·  ")), C::boneDim, fontSmall(9), Qt::AlignCenter);
+
+        if (height() >= 640)
+            Style::textShadow(&p, QRectF(0, float(height()) * 0.16f + 26.f, width(), 22),
                               QStringLiteral("Выбери класс, назови себя и иди. Смерть здесь - часть пути."),
                               C::boneDim.darker(110), fontSmall(11), Qt::AlignCenter);
     }
@@ -2820,7 +2870,9 @@ void TitleScreen::mousePressEvent(QMouseEvent *e)
     } else if (m_screen == Scr_Class) {
         if (nameDiceRect().contains(m_mouse)) { rollRandomName(); update(); e->accept(); return; }
         for (int i = 0; i < 4; ++i)
-            if (diffRect(i).contains(m_mouse)) { m_diff = i; Audio::inst().play(Sfx_Ui); update(); e->accept(); return; }
+            QRectF r = diffTabRect(i);
+            r.moveTop(diffRowRect().top() + 28.f);
+            if (r.contains(m_mouse)) { m_diff = i; Audio::inst().play(Sfx_Ui); update(); e->accept(); return; }
         int idx = -1;
         for (int i = 0; i < buttonCount(); ++i)
             if (buttonRect(i).contains(m_mouse)) { idx = i; break; }

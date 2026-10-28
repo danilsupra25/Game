@@ -1204,16 +1204,32 @@ void GameView::doSkillFx(const ActiveSkill &s, int rank)
     }
     case Fx_Summon: {
         Audio::inst().play(Sfx_Cast);
-        int def = 31; // тень-прислужник
-        if (m_game->level() >= 22) def = 32;
-        PendingSpawn ps;
-        ps.summon = true;
-        ps.defId = def;
-        ps.pos = p->pos + dir * 46.f;
-        ps.owner = p->id;
-        ps.life = dur;
-        ps.dmgMul = 1.2f + d.summonPct;
-        m_pending.append(ps);
+        int def = 31; // тень-прислужник (умолч. для старых умений)
+        if (s.scale >= 20.f && s.scale < 60.f) def = int(s.scale + 0.5f); // scale хранит id существа
+        else if (m_game->level() >= 22) def = 32;
+        // лимит живых прислужников игрока
+        int alive = 0;
+        for (int k = 0; k < m_actors.size(); ++k) {
+            const Actor &o = m_actors[k];
+            if (!o.dead && o.isSummon && o.owner == p->id) ++alive;
+        }
+        int cap = qMax(2, 2 + int(m_game->d().summonPct * 4.f));
+        int toSpawn = qMin(s.projectiles, qMax(0, cap - alive));
+        if (toSpawn <= 0) {
+            ftext(p->pos + QPointF(0, -46), QStringLiteral("прислужников полно"), C::boneDim, false, 3, 13.f);
+            break;
+        }
+        for (int i = 0; i < toSpawn; ++i) {
+            PendingSpawn ps;
+            ps.summon = true;
+            ps.defId = def;
+            float a = rng().frange(0.f, 6.283f);
+            ps.pos = p->pos + dir * 46.f + QPointF(std::cos(a), std::sin(a)) * 18.f;
+            ps.owner = p->id;
+            ps.life = dur;
+            ps.dmgMul = 1.2f + d.summonPct;
+            m_pending.append(ps);
+        }
         ring(p->pos + dir * 46.f, 16, col, 40.f);
         break;
     }

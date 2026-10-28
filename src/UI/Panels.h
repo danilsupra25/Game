@@ -395,9 +395,11 @@ private:
     int m_hover;
     int m_class;
     int m_diff;                 // выбранная сложность (0..3)
-    QRectF diffRect(int i) const;   // кнопки сложности на экране выбора класса
+    QRectF diffRowRect() const;     // блок выбора сложности на экране героя
+    QRectF diffTabRect(int i) const;// вкладки 4 сложностей
     QString diffName(int i) const;
     QString diffDesc(int i) const;
+    QStringList diffBullets(int i) const;
     bool m_volDrag;
     QPointF m_mouse;
     float m_time;
