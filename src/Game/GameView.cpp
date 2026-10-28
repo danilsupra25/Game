@@ -387,10 +387,10 @@ void GameView::spawnEnemy(int defId, const QPointF &pos, bool elite, int levelDe
 
     float hs = 1.f + 0.28f * float(levelDelta);
     float ds = 1.f + 0.20f * float(levelDelta);
-    a.maxHp = e->hp * hs;
+    a.maxHp = e->hp * hs * m_game->enemyHpMul();
     a.hp = a.maxHp;
-    a.dmgMin = e->dmgMin * ds;
-    a.dmgMax = e->dmgMax * ds;
+    a.dmgMin = e->dmgMin * ds * m_game->enemyDmgMul();
+    a.dmgMax = e->dmgMax * ds * m_game->enemyDmgMul();
     a.armor = e->armor * (1.f + 0.15f * levelDelta);
     a.speed = e->speed;
     a.xp = int(e->xp * 1.25f * (1.f + 0.2f * levelDelta));
@@ -1639,7 +1639,7 @@ void GameView::dropLoot(const QPointF &pos, int ilvl, float dropChance, int gold
     const Derived &d = m_game->d();
     // золото
     int gold = rng().range(goldMin, qMax(goldMin + 1, goldMax));
-    gold = int(float(gold) * (1.f + d.goldFind));
+    gold = int(float(gold) * (1.f + d.goldFind) * m_game->goldMul());
     if (gold > 0) {
         Pickup pk;
         pk.kind = 1;

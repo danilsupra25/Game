@@ -100,6 +100,8 @@ public:
     float dmgDealtMul() const;    // во сколько больше наносить
     float xpMul() const;          // множитель опыта
     float goldMul() const;        // множитель золота
+    float enemyHpMul() const;     // множитель здоровья врагов
+    float enemyDmgMul() const;    // дополнительный множитель урона врагов (вдобавок к dmgTakenMul)
     bool  doomPermadeath() const { return m_diff == D_Doom; }
 
     // ---------- персонаж ----------

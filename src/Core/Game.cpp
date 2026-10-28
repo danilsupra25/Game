@@ -1122,6 +1122,24 @@ float Game::goldMul() const
     default:     return 1.00f;
     }
 }
+float Game::enemyHpMul() const
+{
+    switch (m_diff) {
+    case D_Easy: return 0.80f;
+    case D_Hard: return 1.30f;
+    case D_Doom: return 1.55f;
+    default:     return 1.00f;
+    }
+}
+float Game::enemyDmgMul() const
+{
+    switch (m_diff) {
+    case D_Easy: return 0.85f;
+    case D_Hard: return 1.15f;
+    case D_Doom: return 1.25f;
+    default:     return 1.00f;
+    }
+}
 void Game::registerKill() { ++m_kills; }
 
 void Game::tick(float dt)
