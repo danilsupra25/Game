@@ -49,6 +49,7 @@ enum PanelAction {
     Act_PauseTabSound = 513, Act_PauseTabVideo = 514, Act_PauseTabKeys = 515, Act_PauseBack = 516,
     Act_VideoPixel = 517, Act_VideoScan = 518, Act_VideoGl = 519, Act_VideoSprites = 520,
     Act_VideoLight = 521, Act_VideoShadow = 522,
+    Act_VideoAutoQ = 523, Act_VideoMinimap = 524,
     // смерть
     Act_DeathRespawn = 600, Act_DeathQuit,
     // лог/справка
@@ -1912,7 +1913,7 @@ void PausePanel::paintPanel(QPainter *p, const QRectF &r)
                                       "\xD0\xB2\xD1\x8B\xD1\x81\xD0\xBE\xD0\xBA\xD0\xB8\xD0\xB9" }; // высокий
         static const char *sqn[2] = { "\xD0\xB2\xD1\x8B\xD0\xBA\xD0\xBB",           // выкл
                                       "\xD0\xB2\xD0\xBA\xD0\xBB" };                   // вкл
-        VBtn vb[8];
+        VBtn vb[10];
         vb[0].label = m_shake ? QStringLiteral("Тряска экрана: да") : QStringLiteral("Тряска экрана: нет");
         vb[0].glyph = Gl_Settings; vb[0].act = Act_PauseShake; vb[0].on = m_shake;
         vb[1].label = m_pixel <= 1 ? QStringLiteral("Пиксель-арт: выкл")
@@ -1931,29 +1932,33 @@ void PausePanel::paintPanel(QPainter *p, const QRectF &r)
         vb[6].glyph = Gl_Torch; vb[6].act = Act_VideoLight; vb[6].on = m_lightQ > 0;
         vb[7].label = QStringLiteral("Тени: %1").arg(QString::fromUtf8(sqn[qBound(0, m_shadowQ, 1)]));
         vb[7].glyph = Gl_Ward; vb[7].act = Act_VideoShadow; vb[7].on = m_shadowQ > 0;
+        vb[8].label = m_autoQ ? QStringLiteral("Авто-качество по FPS: вкл") : QStringLiteral("Авто-качество по FPS: выкл");
+        vb[8].glyph = Gl_Star; vb[8].act = Act_VideoAutoQ; vb[8].on = m_autoQ;
+        vb[9].label = m_miniOn ? QStringLiteral("Миникарта: вкл") : QStringLiteral("Миникарта: выкл");
+        vb[9].glyph = Gl_Map; vb[9].act = Act_VideoMinimap; vb[9].on = m_miniOn;
         float y;
         if (ca.width() >= 760) {
-            // широкий экран: две колонки по четыре кнопки, чтобы всё влезло
+            // широкий экран: две колонки по пять кнопок, чтобы всё влезло
             float cw = qMin(430.f, (float(ca.width()) - 100.f) * 0.5f);
             float gapC = 36.f;
             float x0 = ca.left() + (ca.width() - (cw * 2 + gapC)) * 0.5f;
             float y0 = ca.top() + 18;
-            for (int i = 0; i < 8; ++i) {
-                int col = i / 4, row = i % 4;
+            for (int i = 0; i < 10; ++i) {
+                int col = i / 5, row = i % 5;
                 int bi = addButton(QRectF(x0 + col * (cw + gapC), y0 + row * 44, cw, 38),
                                    vb[i].label, vb[i].glyph, vb[i].act);
                 if (bi >= 0) m_buttons[bi].active = vb[i].on;
             }
-            y = y0 + 4 * 44 + 12;
+            y = y0 + 5 * 44 + 12;
         } else {
             float cw = qMin(460.f, float(ca.width()) * 0.66f);
             float cx = ca.left() + (ca.width() - cw) * 0.5f;
             float y0 = ca.top() + 14;
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < 10; ++i) {
                 int bi = addButton(QRectF(cx, y0 + i * 40, cw, 34), vb[i].label, vb[i].glyph, vb[i].act);
                 if (bi >= 0) m_buttons[bi].active = vb[i].on;
             }
-            y = y0 + 8 * 40 + 8;
+            y = y0 + 10 * 40 + 8;
         }
         QStringList info;
         info << QStringLiteral("Свет: высокое - мягкие ореолы факелов; низкое - грубее, но быстрее; выкл - без темноты.");
@@ -2107,16 +2112,22 @@ void DeathPanel::paintPanel(QPainter *p, const QRectF &r)
     drawGlyph(p, Gl_Skull, iconR, QColor(226, 214, 196), C::blood, 0.5f);
 
     float y = iconR.bottom() + 26;
+    const bool doom = m_game->doomPermadeath();
     QStringList sl;
     sl << QStringLiteral("Уровень %1 · убийств %2 · смертей %3").arg(m_game->level()).arg(m_game->kills()).arg(m_game->deaths());
-    sl << QStringLiteral("Потеряно 10% золота. Возрождение: %1")
-          .arg(Data::loc(m_game->lastTown()) ? Data::loc(m_game->lastTown())->name : QStringLiteral("Лагерь «Искра»"));
+    if (doom)
+        sl << QStringLiteral("ГОРНИЛО ПУСТОТЫ: одна жизнь. Сохранение сгорело вместе с тобой.");
+    else
+        sl << QStringLiteral("Потеряно 10% золота. Возрождение: %1")
+              .arg(Data::loc(m_game->lastTown()) ? Data::loc(m_game->lastTown())->name : QStringLiteral("Лагерь «Искра»"));
     for (int i = 0; i < sl.size(); ++i) {
-        Style::textShadow(p, QRectF(r.left(), y, r.width(), 20), sl.at(i), C::boneDim, fontSmall(13), Qt::AlignCenter);
+        Style::textShadow(p, QRectF(r.left(), y, r.width(), 20), sl.at(i),
+                          doom ? QColor(220, 90, 80) : C::boneDim, fontSmall(13), Qt::AlignCenter);
         y += 22;
     }
     float cw = 300, bh = 46;
-    addButton(QRectF(r.center().x() - cw * 0.5f, y + 14, cw, bh), QStringLiteral("Восстать из пепла"), Gl_Play,
+    addButton(QRectF(r.center().x() - cw * 0.5f, y + 14, cw, bh),
+              doom ? QStringLiteral("Принять гибель") : QStringLiteral("Восстать из пепла"), Gl_Play,
               Act_DeathRespawn);
     addButton(QRectF(r.center().x() - cw * 0.5f, y + 14 + bh + 12, cw, bh - 8),
               QStringLiteral("В главное меню"), Gl_Quit, Act_DeathQuit);
@@ -2322,7 +2333,7 @@ static const ClassInfo g_classes[4] = {
 } // anonymous
 
 TitleScreen::TitleScreen(QWidget *parent)
-    : QWidget(parent), m_screen(Scr_Main), m_hover(-1), m_class(0), m_time(0.f), m_fade(1.f), m_volDrag(false)
+    : QWidget(parent), m_screen(Scr_Main), m_hover(-1), m_class(0), m_diff(1), m_time(0.f), m_fade(1.f), m_volDrag(false)
 {
     setMouseTracking(true);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -2430,6 +2441,65 @@ QRectF TitleScreen::nameDiceRect() const
     return QRectF(nr.right() + 10, nr.top() - 3, 40, 40);
 }
 
+// ---- выбор сложности на экране создания героя ----
+QString TitleScreen::diffName(int i) const
+{
+    static const char *nm[] = { "Тлеющий уголёк", "Обычный пепел", "Янтарный жар", "Горнило Пустоты" };
+    return QString::fromUtf8(nm[qBound(0, i, 3)]);
+}
+
+QString TitleScreen::diffDesc(int i) const
+{
+    switch (i) {
+    case 0:  return QString::fromUtf8("Путешествие для отдыха.");
+    case 1:  return QString::fromUtf8("Так задумано. Задуманный баланс.");
+    case 2:  return QString::fromUtf8("Пепел любит смелых.");
+    default: return QString::fromUtf8("Одна жизнь. Смерть стирает сохранение.");
+    }
+}
+
+QStringList TitleScreen::diffBullets(int i) const
+{
+    QStringList l;
+    switch (i) {
+    case 0:
+        l << QStringLiteral("Враги бьют на 25% слабее и получают +40% урона")
+          << QStringLiteral("Опыт и золото x1.25");
+        break;
+    case 1:
+        l << QStringLiteral("Урон, опыт и золото - как задумано")
+          << QStringLiteral("Смерть отбрасывает к истокам без потери героя");
+        break;
+    case 2:
+        l << QStringLiteral("Враги злее (+35% урона) и крепче (+20% здоровья)")
+          << QStringLiteral("Опыт и золото x0.85");
+        break;
+    default:
+        l << QStringLiteral("Враги смертоносны: +60% урона, +35% здоровья")
+          << QStringLiteral("Опыт и золото x0.7 · смерть стирает сохранение");
+        break;
+    }
+    return l;
+}
+
+// блок сложности: горизонтальная полоса над полем имени
+QRectF TitleScreen::diffRowRect() const
+{
+    float w = qMin(660.f, float(width()) - 60.f);
+    float x = (float(width()) - w) * 0.5f;
+    float y = float(height()) - 216.f;   // поле имени на -118, ниже резерв под подпись
+    return QRectF(x, y, w, 92.f);
+}
+
+QRectF TitleScreen::diffTabRect(int i) const
+{
+    QRectF row = diffRowRect();
+    float gap = 8.f;
+    float tw = (row.width() - gap * 3.f) / 4.f;
+    QRectF r(row.left() + float(i) * (tw + gap), row.top() + 28.f, tw, 34.f);
+    return r;
+}
+
 void TitleScreen::rollRandomName()
 {
     static const char *first[] = {
@@ -2474,7 +2544,7 @@ QRectF TitleScreen::buttonRect(int i) const
             float totalW = cw * 4 + 12 * 3;
             float x0 = (float(width()) - totalW) * 0.5f;
             float top = float(height()) * 0.16f + 62.f;
-            float bottom = float(height()) - 152.f;
+            float bottom = float(height()) - 236.f;
             float cardH = qBound(150.f, bottom - top, 430.f);
             float cardTop = top + qMax(0.f, (bottom - top - cardH) * 0.5f);
             return QRectF(x0 + float(i) * (cw + 12), cardTop, cw, cardH);
@@ -2690,16 +2760,41 @@ void TitleScreen::paintEvent(QPaintEvent *)
 
     if (m_screen == Scr_Class) {
         QRectF nr = buttonRect(99);
-        Style::textShadow(&p, QRectF(nr.left() - 200, nr.top(), 190, nr.height()),
-                          QStringLiteral("Имя героя:"), C::boneDim, fontHead(13), Qt::AlignRight | Qt::AlignVCenter);
         Style::panel(&p, nr.adjusted(-6, -6, 6, 6), 1, 0.9f);
         QRectF dr = nameDiceRect();
         bool dhov = dr.contains(m_mouse);
         Style::button(&p, dr, QString(), dhov, false, true, Gl_Star, dhov ? 1.f : 0.f, false);
-        Style::textShadow(&p, QRectF(dr.left() - 6, dr.bottom() + 2, dr.width() + 12, 14),
-                          QStringLiteral("имя"), C::boneDim.darker(110), fontSmall(8), Qt::AlignCenter);
-        if (height() >= 560)
-            Style::textShadow(&p, QRectF(0, nr.top() - 28, width(), 22),
+
+        // --- выбор сложности: аккуратный блок над полем имени ---
+        static const QColor dCol[4] = { QColor(90, 170, 110), C::bone, QColor(235, 150, 60), QColor(200, 60, 60) };
+        QRectF row = diffRowRect();
+        Style::panel(&p, row, 1, 0.85f);
+        Style::textShadow(&p, QRectF(row.left() + 14, row.top() + 8, row.width() - 28, 16),
+                          QStringLiteral("С Л О Ж Н О С Т Ь"), C::boneDim, fontSmall(9), Qt::AlignLeft);
+        for (int i = 0; i < 4; ++i) {
+            QRectF r = diffTabRect(i);
+            bool sel = (m_diff == i);
+            bool hov = r.contains(m_mouse);
+            QColor cc = dCol[i];
+            p.setPen(QPen(sel ? cc : (hov ? cc.darker(140) : C::edge.darker(140)), sel ? 2.0 : 1.2));
+            p.setBrush(sel ? QColor(cc.red(), cc.green(), cc.blue(), 46)
+                           : (hov ? QColor(255, 255, 255, 14) : QColor(10, 8, 16, 120)));
+            p.drawRoundedRect(r, 6, 6);
+            Style::textShadow(&p, r, diffName(i), sel ? cc.lighter(125) : (hov ? C::bone : C::boneDim),
+                              fontSmall(10), Qt::AlignCenter);
+        }
+        // описание выбранной сложности
+        QColor dc = dCol[qBound(0, m_diff, 3)];
+        QStringList bl = diffBullets(m_diff);
+        float ty = row.bottom() + 4.f;
+        Style::textShadow(&p, QRectF(row.left(), ty, row.width(), 15),
+                          QStringLiteral("%1 — %2").arg(diffName(m_diff), diffDesc(m_diff)),
+                          dc.lighter(120), fontSmall(10), Qt::AlignCenter);
+        Style::textShadow(&p, QRectF(row.left(), ty + 16.f, row.width(), 14),
+                          bl.join(QStringLiteral("  ·  ")), C::boneDim, fontSmall(9), Qt::AlignCenter);
+
+        if (height() >= 640)
+            Style::textShadow(&p, QRectF(0, float(height()) * 0.16f + 26.f, width(), 22),
                               QStringLiteral("Выбери класс, назови себя и иди. Смерть здесь - часть пути."),
                               C::boneDim.darker(110), fontSmall(11), Qt::AlignCenter);
     }
@@ -2774,6 +2869,10 @@ void TitleScreen::mousePressEvent(QMouseEvent *e)
         }
     } else if (m_screen == Scr_Class) {
         if (nameDiceRect().contains(m_mouse)) { rollRandomName(); update(); e->accept(); return; }
+        for (int i = 0; i < 4; ++i) {
+            QRectF r = diffTabRect(i);
+            if (r.contains(m_mouse)) { m_diff = i; Audio::inst().play(Sfx_Ui); update(); e->accept(); return; }
+        }
         int idx = -1;
         for (int i = 0; i < buttonCount(); ++i)
             if (buttonRect(i).contains(m_mouse)) { idx = i; break; }
@@ -2782,7 +2881,7 @@ void TitleScreen::mousePressEvent(QMouseEvent *e)
         else if (idx == 5) {
             Audio::inst().play(Sfx_LevelUp);
             m_nameEdit->hide();
-            emit startNewGame(m_nameEdit->text().trimmed(), m_class);
+            emit startNewGame(m_nameEdit->text().trimmed(), m_class, m_diff);
         }
     } else {
         int idx = -1;

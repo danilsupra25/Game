@@ -128,6 +128,7 @@ struct Actor
     int tint = 0;
     int glyph = 0;
     int lastHitType = 0;
+    bool raisedByPriest = false;   // восставший жрецом из трупа слуга (фиолетовая аура)
     QString nameOverride;
 };
 
@@ -196,7 +197,8 @@ struct FText
     float size = 14.f;
     bool crit = false;
     float vx = 0.f, vy = -40.f;
-    int kind = 0;             // 0 урон,1 крит,2 лечение,3 текст,4 опыт
+    int kind = 0;             // 0 урон,1 крит,2 лечение,3 текст,4 опыт,5 реплика NPC
+    QStringList lines;        // для kind==5: заранее перенесённый текст (окно под фразу)
 };
 
 struct Zone
@@ -251,7 +253,9 @@ struct Npc
     QPointF pos;
     int kind = 0;             // 0 торговец,1 кузнец,2 целитель,3 старейшина
     QString name;
-    QString line;
+    QString line;             // текущая (последняя сказанная) фраза
+    QStringList lines;        // набор фраз для рандомной выдачи
+    int lastLine = -1;        // чтобы не повторять одну и ту же подряд
     float animT = 0.f;
     int tint = 0;
 };

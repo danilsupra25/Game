@@ -246,6 +246,8 @@ public:
     void setGl(bool v) { m_gl = v; }
     void setLightQ(int v) { m_lightQ = v; }
     void setShadowQ(int v) { m_shadowQ = v; }
+    void setAutoQ(bool v) { m_autoQ = v; }
+    void setMinimap(bool v) { m_miniOn = v; }
     bool glNow() const { return m_gl; }
     bool shakeOn() const { return m_shake; }
     bool fullOn() const { return m_fullscreen; }
@@ -253,6 +255,8 @@ public:
     bool scanNow() const { return m_scan; }
     int lightQNow() const { return m_lightQ; }
     int shadowQNow() const { return m_shadowQ; }
+    bool autoQNow() const { return m_autoQ; }
+    bool minimapNow() const { return m_miniOn; }
 
     void paintKeys(QPainter *p, const QRectF &r);
     void mousePressEvent(QMouseEvent *);
@@ -284,6 +288,8 @@ private:
     bool m_gl;
     int m_lightQ;
     int m_shadowQ;
+    bool m_autoQ = true;   // авто-подстройка качества по FPS
+    bool m_miniOn = true;  // миникарта в HUD
     QVector<QRectF> m_keyRows;
     bool m_volDrag;
     QRectF volSliderRect(const QRectF &panel) const;
@@ -370,7 +376,7 @@ public:
     void resetToMain();      // возврат в главное меню (сброс экрана выбора класса)
 
 signals:
-    void startNewGame(QString heroName, int classId);
+    void startNewGame(QString heroName, int classId, int diff);
     void continueGame();
     void quitGame();
     void showHelp();
@@ -388,6 +394,12 @@ private:
     int m_screen;
     int m_hover;
     int m_class;
+    int m_diff;                 // выбранная сложность (0..3)
+    QRectF diffRowRect() const;     // блок выбора сложности на экране героя
+    QRectF diffTabRect(int i) const;// вкладки 4 сложностей
+    QString diffName(int i) const;
+    QString diffDesc(int i) const;
+    QStringList diffBullets(int i) const;
     bool m_volDrag;
     QPointF m_mouse;
     float m_time;

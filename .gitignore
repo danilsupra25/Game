@@ -1,0 +1,43 @@
+# ---------- Артефакты сборки (qmake / make / mingw / MSVC) ----------
+build/
+build-*/
+debug/
+release/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.so.*
+*.a
+*.lib
+*.out
+*.pdb
+*.ilk
+*.exp
+*.rcc
+*.res
+Makefile
+Makefile.*
+.qmake.stash
+moc_*.cpp
+moc_*.h
+moc_predefs.h
+qrc_*.cpp
+ui_*.h
+*_autogen/
+.DS_Store
+
+# ---------- Настройки Qt Creator (локальные, не для репозитория) ----------
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+CMakeLists.txt.user*
+
+# ---------- Логи, временные файлы, IDE ----------
+*.log
+*.tmp
+*~
+.vscode/
+.idea/

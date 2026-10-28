@@ -832,6 +832,35 @@ def mob_morpri(outdir):    # Жрец морока (кастер, парит)
                 c.px(sxy[0] + math.cos(math.radians(a + i * 15)) * 3.6,
                      sxy[1] + math.sin(math.radians(a + i * 15)) * 3.6, P[3])
     anims_caster(cr, body, cast)
+    # собственный приём некроманта: «восстание» - посох вниз, из земли поднимается рука мертвеца
+    raise_ = []
+    staves = [75, 100, 125, 112]
+    arms = [0, 2, 4, 3]
+    glows = [0.3, 0.9, 1.4, 1.0]
+    for i in range(4):
+        c = cr.new()
+        body(c, bob=-1 if i == 2 else 0, i=i, mode="idle")
+        sxy = robed(c, P, 16, g - 8, 1, bob=-1 if i == 2 else 0, sway=0,
+                    staffA=staves[i], orb=glows[i])
+        hx = 16 + (i - 1) * 2.0   # рука мертвеца тянется вверх у ног жреца
+        gy = g
+        hgt = arms[i]
+        if hgt > 0:
+            col = P[2]
+            c.line(hx, gy, hx, gy - hgt, col, 2)                 # предплечье
+            c.line(hx, gy - hgt, hx - 1.4, gy - hgt - 1.6, col)  # большой палец
+            c.line(hx, gy - hgt, hx + 0.2, gy - hgt - 2.0, col)  # пальцы
+            c.line(hx, gy - hgt, hx + 1.6, gy - hgt - 1.6, col)
+            c.ell(hx, gy + 0.5, 3.2 - i * 0.3, 1.0, P[1], 160)   # вскопанная земля
+        if i >= 1:  # некротическое свечение от сферы к руке
+            for k in range(3):
+                t = (k + 1) / 4.0
+                gx = sxy[0] + (hx - sxy[0]) * t
+                gyy = sxy[1] + (gy - hgt - sxy[1]) * t
+                c.px(gx, gyy, P[3], 200)
+                c.px(gx + 0.6, gyy - 0.6, P[4], 140)
+        raise_.append(c)
+    cr.add("raise", raise_)
     return cr.build(outdir)
 
 

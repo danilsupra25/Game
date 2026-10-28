@@ -36,7 +36,7 @@ protected:
     void showEvent(QShowEvent *);
 
 private slots:
-    void onStartNewGame(QString heroName, int classId);
+    void onStartNewGame(QString heroName, int classId, int diff);
     void onContinueGame();
     void onQuitGame();
     void onUiKey(int key);
@@ -102,6 +102,8 @@ private:
     bool m_sprites;
     int m_lightQ;        // 0 выкл, 1 низкий, 2 высокий (настройка света)
     int m_shadowQ;       // 0 выкл, 1 простые, 2 полные (настройка теней)
+    bool m_autoQ = true;   // авто-подстройка качества по FPS
+    bool m_minimap = true; // показ миникарты в HUD
     int m_invSort;       // режим сортировки сумки: 0 тип, 1 редкость, 2 уровень
     bool m_musicStarted;
 };

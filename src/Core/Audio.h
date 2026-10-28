@@ -78,9 +78,9 @@ public:
     // which: 0 - игровой трек (music), 1 - меню (music2), 2 - поселение с NPC (music3)
     void startMusic(int which = 0);
     void stopMusic();
-    bool musicPlaying() const { return m_musicOn; }
-    bool musicIsWav() const { return m_musicWav; }
-    QString currentMusic() const { return m_musicFile; }
+    bool musicPlaying() const;
+    bool musicIsWav() const;
+    QString currentMusic() const;
     QString musicFile(int which) const;
 
 private:

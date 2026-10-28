@@ -56,7 +56,7 @@ void MainWindow::buildUi()
     // ---- титульный экран ----
     m_title = new TitleScreen(m_stack);
     m_stack->addWidget(m_title);
-    connect(m_title, SIGNAL(startNewGame(QString, int)), this, SLOT(onStartNewGame(QString, int)));
+    connect(m_title, SIGNAL(startNewGame(QString, int, int)), this, SLOT(onStartNewGame(QString, int, int)));
     connect(m_title, SIGNAL(continueGame()), this, SLOT(onContinueGame()));
     connect(m_title, SIGNAL(quitGame()), this, SLOT(onQuitGame()));
     connect(m_title, SIGNAL(showHelp()), this, SLOT(onTitleHelp()));
@@ -134,7 +134,8 @@ void MainWindow::loadSettings()
     QSettings s(QStringLiteral("AshAmber"), QStringLiteral("PepeL_i_Yantar"));
     m_sound = s.value(QStringLiteral("sound"), true).toBool();
     m_shake = s.value(QStringLiteral("shake"), true).toBool();
-    bool full = s.value(QStringLiteral("fullscreen"), false).toBool();
+    // по умолчанию игра стартует во весь экран; в настройках можно выключить
+    bool full = s.value(QStringLiteral("fullscreen"), true).toBool();
     QRect g = s.value(QStringLiteral("geometry")).toRect();
     if (g.isValid() && !full) setGeometry(g);
     m_pause->setShake(m_shake);
@@ -147,12 +148,18 @@ void MainWindow::loadSettings()
     TileBank::setEnabled(m_sprites);
     m_lightQ = qBound(0, s.value(QStringLiteral("lightq"), 2).toInt(), 2);
     m_shadowQ = qBound(0, s.value(QStringLiteral("shadowq"), 1).toInt(), 1);
+    m_autoQ = s.value(QStringLiteral("autoquality"), true).toBool();
+    m_minimap = s.value(QStringLiteral("minimap"), true).toBool();
     m_invSort = qBound(0, s.value(QStringLiteral("invsort"), 0).toInt(), 2);
     m_pause->setPixel(m_pixel);
     m_pause->setScan(m_scan);
     m_pause->setGl(m_gl);
     m_pause->setLightQ(m_lightQ);
     m_pause->setShadowQ(m_shadowQ);
+    m_pause->setAutoQ(m_autoQ);
+    m_pause->setMinimap(m_minimap);
+    m_view->setAutoQuality(m_autoQ);
+    m_view->setMinimapVisible(m_minimap);
     if (full) showFullScreen();
 }
 
@@ -168,6 +175,8 @@ void MainWindow::saveSettings()
     s.setValue(QStringLiteral("sprites"), m_sprites);
     s.setValue(QStringLiteral("lightq"), m_lightQ);
     s.setValue(QStringLiteral("shadowq"), m_shadowQ);
+    s.setValue(QStringLiteral("autoquality"), m_autoQ);
+    s.setValue(QStringLiteral("minimap"), m_minimap);
     s.setValue(QStringLiteral("invsort"), m_invSort);
     if (!isFullScreen()) s.setValue(QStringLiteral("geometry"), geometry());
 }
@@ -382,6 +391,15 @@ void MainWindow::onPanelAction(int id)
               m_view->setShadowQ(m_shadowQ); m_pause->setShadowQ(m_shadowQ); m_pause->refresh(); saveSettings();
               onLog(QStringLiteral("Тени: %1.").arg(shadowQName(m_shadowQ)), C::boneDim);
               break;
+    case 523: m_autoQ = !m_autoQ;              // авто-подстройка качества по FPS
+              m_view->setAutoQuality(m_autoQ); m_pause->setAutoQ(m_autoQ); m_pause->refresh(); saveSettings();
+              onLog(m_autoQ ? QStringLiteral("Авто-качество включено: при просадке FPS картинка упрощается, при восстановлении - улучшается.")
+                            : QStringLiteral("Авто-качество выключено: качество света и теней всегда как в настройках."), C::boneDim);
+              break;
+    case 524: m_minimap = !m_minimap;          // миникарта в HUD
+              m_view->setMinimapVisible(m_minimap); m_pause->setMinimap(m_minimap); m_pause->refresh(); saveSettings();
+              onLog(m_minimap ? QStringLiteral("Миникарта показывается.") : QStringLiteral("Миникарта скрыта."), C::boneDim);
+              break;
     case 509: onToggleFullscreen(); break;
     case 503: m_pause->setPage(1); m_pause->setSetTab(0); break;
     case 510: m_pause->setPage(1); m_pause->setSetTab(2); break;
@@ -403,10 +421,10 @@ void MainWindow::onPanelAction(int id)
 // ============================================================
 //  ИГРОВОЙ ПОТОК
 // ============================================================
-void MainWindow::onStartNewGame(QString heroName, int classId)
+void MainWindow::onStartNewGame(QString heroName, int classId, int diff)
 {
     Audio::inst().initAssets();      // перескан: файлы могли положить после запуска
-    m_game->newGame(heroName, classId);
+    m_game->newGame(heroName, classId, diff);
     m_playing = true;
     m_stack->setCurrentWidget(m_shell);
     m_log->clear();
@@ -578,6 +596,12 @@ void MainWindow::onPlayerDied()
 
 void MainWindow::onRespawn()
 {
+    if (m_game->doomPermadeath()) {
+        // Горнило Пустоты: одна жизнь — сохранение сгорает, герой возвращается в меню
+        Game::deleteSave();
+        onQuitToMenu();
+        return;
+    }
     m_death->hide();
     Audio::inst().startMusic(2);   // возрождаемся в поселении
     m_view->respawn();

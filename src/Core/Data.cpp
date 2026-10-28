@@ -453,6 +453,24 @@ static void loadSkills()
     add("blink", QStringLiteral("Скачок"),
         QStringLiteral("Мгновенное перемещение к курсору."),
         Fx_Dash, Dmg_Arcane, 10, 3.0f, 0, 0, 320, 0, 0, 1, 0, 0, 2, Gl_Blink, C::arcane, 0);
+
+    // --- ветка призыва Жреца Пепла: 5 существ на выбор ---
+    // scale хранит id существа, которое вызывает умение
+    add("sum_bone", QStringLiteral("Костяной витязь"),
+        QStringLiteral("Призывает воина из костей: крепкий боец ближнего боя."),
+        Fx_Summon, Dmg_Physical, 24, 10.0f, 0.90f, 0, 90, 0, 16.0f, 1, 0, 0, 17, Gl_Bone, C::bone, 35.f);
+    add("sum_shade", QStringLiteral("Тень-прислужник"),
+        QStringLiteral("Быстрая тень, рвущаяся к врагам хозяина."),
+        Fx_Summon, Dmg_Arcane, 26, 11.0f, 0.85f, 0, 90, 0, 14.0f, 1, 0, 0, 9, Gl_Summon, C::arcane, 32.f);
+    add("sum_ash", QStringLiteral("Пепельный отпрыск"),
+        QStringLiteral("Огонёк пепла, поджигающий всё живое."),
+        Fx_Summon, Dmg_Fire, 28, 12.0f, 0.85f, 0, 90, 0, 15.0f, 1, 0, 0, 1, Gl_Fireball, C::ember, 33.f);
+    add("sum_thorn", QStringLiteral("Отпрыск терний"),
+        QStringLiteral("Рой шипастых отпрысков, пропитанных ядом."),
+        Fx_Summon, Dmg_Poison, 22, 9.0f, 0.80f, 0, 90, 0, 13.0f, 2, 0, 0, 7, Gl_Tree, C::poison, 31.f);
+    add("sum_wraith", QStringLiteral("Пепельный призрак"),
+        QStringLiteral("Могучий дух: долго живёт и бьёт сильнее всех."),
+        Fx_Summon, Dmg_Arcane, 34, 15.0f, 1.05f, 0, 90, 0, 20.0f, 1, 0, 0, 14, Gl_Skull, C::good, 36.f);
 }
 
 // ----------------------------------------------------------------
@@ -527,9 +545,10 @@ static void loadNodes()
     S(3, 270, Nk_Notable, 2, "Тень ветра", "+8 ловкости, +8% скорости атаки, +3% уклонения", MB().s(&StatMods::agi, 8).s(&StatMods::attackSpeed, 0.08f).s(&StatMods::dodge, 0.03f).d(), 2, 2, 8, -1, "", cRog);
     S(3, 300, Nk_Active, 2, "Землетрясение", "Умение: ударные волны по земле.", StatMods(), 2, 1, 10, 13, "", cRog);
     S(3, 330, Nk_Notable, 2, "Смертельный удар", "+4% крита, +30% крит. урона", MB().s(&StatMods::critChance, 0.04f).s(&StatMods::critMult, 0.30f).d(), 2, 2, 9, -1, "", cRog);
-    S(3,   0, Nk_Notable, 3, "Пожиратель", "+6% вампиризма, +10 духа", MB().s(&StatMods::lifeSteal, 0.06f).s(&StatMods::spirit, 10).d(), 2, 2, 8, -1, "", cPri);
-    S(3,  30, Nk_Active, 3, "Чумное облако", "Умение: ядовитая зона.", StatMods(), 2, 1, 7, 8, "", cPri);
-    S(3,  60, Nk_Notable, 3, "Призыватель теней", "+25% силы прислужников, +10 духа", MB().s(&StatMods::summonPct, 0.25f).s(&StatMods::spirit, 10).d(), 2, 2, 9, -1, "", cPri);
+    S(3,   0, Nk_Active, 3, "Костяной витязь", "Умение призыва: воин из костей.", StatMods(), 2, 1, 7, 18, "", cPri);
+    S(3,  15, Nk_Active, 3, "Тень-прислужник", "Умение призыва: быстрая тень.", StatMods(), 2, 1, 8, 19, "", cPri);
+    S(3,  30, Nk_Active, 3, "Пепельный отпрыск", "Умение призыва: горящий огонёк.", StatMods(), 2, 1, 9, 20, "", cPri);
+    S(3,  45, Nk_Active, 3, "Отпрыск терний", "Умение призыва: ядовитый рой (2 шт).", StatMods(), 2, 1, 10, 21, "", cPri);
 
     // ---- КОЛЬЦО 3.5: сильные умения на диагоналях ----
     S(3, 105, Nk_Active, -1, "Метеор", "Умение: падение раскалённой глыбы.", StatMods(), 3, 1, 12, 4, "", cMix);
@@ -537,6 +556,7 @@ static void loadNodes()
     S(3, 255, Nk_Active, -1, "Метка смерти", "Умение: враг получает больше урона.", StatMods(), 2, 1, 10, 14, "", cMix);
     S(3, 345, Nk_Active, -1, "Теневой клинок", "Умение: призывает призрачного воина.", StatMods(), 3, 1, 12, 9, "", cMix);
     S(3,  15, Nk_Active, -1, "Жажда крови", "Умение: ярость и вампиризм.", StatMods(), 3, 1, 13, 15, "", cMix);
+    S(3,  50, Nk_Active, 3, "Пепельный призрак", "Умение призыва: могучий дух.", StatMods(), 3, 1, 13, 22, "", cPri);
 
     // ---- КОЛЬЦО 4: заметные узлы ----
     S(4,  90, Nk_Notable, 0, "Воля стали", "+35 брони, +40 здоровья, +6 живучести", MB().s(&StatMods::armor, 35).s(&StatMods::hpFlat, 40).s(&StatMods::vit, 6).d(), 3, 2, 14, -1, "", cWar);
@@ -712,12 +732,12 @@ static void loadEnemies()
     // --- РЕГИОН 3: Гнилые топи ---
     add("e_rot",   QStringLiteral("Болотная гниль"),     19, Ai_Caster,   320, 34, 48, Dmg_Poison,  24, 68, 18, 320, 2.4f,  180, 32, 54, 0.18f, 18, Gl_Poison, X);
     add("e_devour",QStringLiteral("Трупоед"),            18, Ai_Swarm,    240, 24, 32, Dmg_Physical,16, 150, 15, 26, 0.8f,  150, 28, 48, 0.12f, 19, Gl_Skull, X);
-    add("e_morpri",QStringLiteral("Жрец морока"),        21, Ai_Summoner, 400, 38, 52, Dmg_Arcane,  30, 74, 17, 340, 2.4f,  240, 42, 70, 0.24f, 20, Gl_Curse, X);
+    add("e_morpri",QStringLiteral("Жрец морока"),        21, Ai_Caster,   400, 38, 52, Dmg_Arcane,  30, 74, 17, 340, 2.4f,  240, 42, 70, 0.24f, 20, Gl_Curse, X);
     add("e_drown", QStringLiteral("Затонувший страж"),   20, Ai_Tank,     780, 44, 60, Dmg_Physical,72, 50, 28, 40, 2.0f,   220, 40, 66, 0.22f, 21, Gl_Shield, X);
     add("e_plague",QStringLiteral("Чумной стрелок"),     19, Ai_Ranged,   300, 36, 50, Dmg_Poison,  20, 92, 15, 320, 1.7f,  175, 32, 55, 0.16f, 22, Gl_Bone, X);
     {
         EnemyDef p; p.rangedProjSpeed = 420; set(22, p);
-        EnemyDef s; s.summoner = true; s.summonId = 31; s.summonCount = 2; s.rangedProjSpeed = 380; set(20, s);
+        EnemyDef s; s.rangedProjSpeed = 380; set(20, s);
         EnemyDef c; c.detectRange = 420; set(18, c);
         EnemyDef b; b.boss = true; b.title = QStringLiteral("Гнилостный Колосс"); b.phases = 3; b.patternSet = 3; b.scale = 1.9f; b.detectRange = 950; b.summoner = true; b.summonId = 31; b.summonCount = 3;
         add("b_rot", QStringLiteral("Гнилостный Колосс"), 25, Ai_Boss, 15000, 60, 84, Dmg_Poison, 120, 78, 44, 54, 1.6f, 6200, 520, 900, 1.0f, 23, Gl_Boss, b);
@@ -742,6 +762,8 @@ static void loadEnemies()
     add("m_thorn", QStringLiteral("Отпрыск терний"),      8, Ai_Swarm,   50, 6, 9,   Dmg_Poison,   2, 120, 11, 22, 0.9f,   6, 0, 1, 0.02f, 30, Gl_Tree, X);
     add("m_shade", QStringLiteral("Тень-прислужник"),    18, Ai_Swarm,  140, 16, 22,Dmg_Arcane,   8, 140, 13, 24, 0.8f,  14, 0, 2, 0.02f, 31, Gl_Summon, X);
     add("m_ash",   QStringLiteral("Пепельный отпрыск"),  26, Ai_Chase,  320, 34, 46,Dmg_Fire,    20, 130, 15, 26, 1.0f,  30, 0, 4, 0.02f, 32, Gl_Fireball, X);
+    add("m_bonek", QStringLiteral("Костяной витязь"),    20, Ai_Chase,   260, 20, 28, Dmg_Physical, 10, 78, 16, 30, 1.2f, 12, 0, 3, 0.02f, 33, Gl_Bone, X);
+    add("m_wraith",QStringLiteral("Пепельный призрак"),  30, Ai_Caster,  380, 30, 42, Dmg_Arcane,  16, 96, 15, 320, 1.8f, 20, 0, 5, 0.02f, 34, Gl_Skull, X);
 }
 
 // ----------------------------------------------------------------

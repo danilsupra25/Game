@@ -338,6 +338,45 @@ int main(int argc, char *argv[])
         CHECK(gt.isUnlocked(0), "стартовая открыта");
         CHECK(gt.isUnlocked(1), "посещение поселения открыло соседний уровень");
     }
+    qInfo("=== 6b1. реплики NPC: непустые, без повтора подряд, облачко под текст ===");
+    {
+        Game gn;
+        gn.newGame(QStringLiteral("Собеседник"), 0);
+        GameView vn(&gn);
+        vn.resize(800, 600);
+        vn.show();
+        // ищем городскую локацию с NPC
+        int townLoc = -1;
+        for (int i = 0; i < Data::locationCount(); ++i) {
+            const LocationDef *L = Data::loc(i);
+            if (L && L->type == Loc_Town) { townLoc = i; break; }
+        }
+        CHECK(townLoc >= 0, "найдена городская локация");
+        if (townLoc >= 0) {
+            vn.loadLocation(townLoc);
+            vn.setInteractive(true);
+            vn.setPaused(false);
+            for (int k = 0; k < 4; ++k) {
+                CHECK(vn.debugTalkToNpc(k), "диалог с NPC доступен");
+                CHECK(vn.debugSpeechCount() > 0, "после диалога есть облачко с текстом");
+            }
+            // две фразы Старейшины подряд не должны совпадать
+            vn.debugTalkToNpc(3);
+            QString s1 = vn.lastNpcLine();
+            vn.debugTalkToNpc(3);
+            QString s2 = vn.lastNpcLine();
+            CHECK(!s1.isEmpty() && !s2.isEmpty(), "реплики непустые");
+            CHECK(s1 != s2, "нет повтора одной фразы подряд");
+            CHECK(s1.length() > 20 || s2.length() > 20, "есть длинные фразы (проверка переноса в UI)");
+            // длинная фраза должна быть разбита на строки для облачка
+            bool anyWrapped = false;
+            for (int t = 0; t < 30 && !anyWrapped; ++t) {
+                vn.debugTalkToNpc(3);
+                anyWrapped = vn.lastNpcLines() > 1;
+            }
+            CHECK(anyWrapped, "длинные фразы переносятся по словам (окно не обрезает)");
+        }
+    }
     {
         Game gu;
         gu.newGame(QStringLiteral("x"), 0);
