@@ -3467,6 +3467,7 @@ bool GameView::debugTalkToNpc(int npcKind)
         Actor *p = player();
         if (!p) return false;
         p->pos = m_npcs[i].pos + QPointF(20, 0);   // встаём вплотную
+        updatePrompt();                            // пересканируем близость NPC (обычно это делает кадры симуляции)
         interact();                                // тот же путь, что и клавиша [F]
         return true;
     }

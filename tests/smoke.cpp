@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
         int townLoc = -1;
         for (int i = 0; i < Data::locationCount(); ++i) {
             const LocationDef *L = Data::loc(i);
-            if (L && L->kind == 1) { townLoc = i; break; }
+            if (L && L->type == Loc_Town) { townLoc = i; break; }
         }
         CHECK(townLoc >= 0, "найдена городская локация");
         if (townLoc >= 0) {

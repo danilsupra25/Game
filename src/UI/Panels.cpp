@@ -2496,7 +2496,8 @@ QRectF TitleScreen::diffTabRect(int i) const
     QRectF row = diffRowRect();
     float gap = 8.f;
     float tw = (row.width() - gap * 3.f) / 4.f;
-    return QRectF(row.left() + float(i) * (tw + gap), row.top(), tw, 34.f);
+    QRectF r(row.left() + float(i) * (tw + gap), row.top() + 28.f, tw, 34.f);
+    return r;
 }
 
 void TitleScreen::rollRandomName()
@@ -2772,7 +2773,6 @@ void TitleScreen::paintEvent(QPaintEvent *)
                           QStringLiteral("С Л О Ж Н О С Т Ь"), C::boneDim, fontSmall(9), Qt::AlignLeft);
         for (int i = 0; i < 4; ++i) {
             QRectF r = diffTabRect(i);
-            r.moveTop(row.top() + 28.f);
             bool sel = (m_diff == i);
             bool hov = r.contains(m_mouse);
             QColor cc = dCol[i];
@@ -2869,10 +2869,10 @@ void TitleScreen::mousePressEvent(QMouseEvent *e)
         }
     } else if (m_screen == Scr_Class) {
         if (nameDiceRect().contains(m_mouse)) { rollRandomName(); update(); e->accept(); return; }
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 4; ++i) {
             QRectF r = diffTabRect(i);
-            r.moveTop(diffRowRect().top() + 28.f);
             if (r.contains(m_mouse)) { m_diff = i; Audio::inst().play(Sfx_Ui); update(); e->accept(); return; }
+        }
         int idx = -1;
         for (int i = 0; i < buttonCount(); ++i)
             if (buttonRect(i).contains(m_mouse)) { idx = i; break; }
