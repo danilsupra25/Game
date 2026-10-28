@@ -185,6 +185,8 @@ void GameView::loadLocation(int locId)
                       QImage::Format_ARGB32_Premultiplied);
     m_decals.fill(Qt::transparent);
     m_decalBounds = QRectF();
+    m_live.clear();
+    m_liveDirty = false;
     m_groundZDirty = true;
     buildCanopy();
     m_envT = rng().frange(4.f, 9.f);
@@ -518,6 +520,7 @@ void GameView::updateSim(float dt)
     m_time += dt;
     m_huntT += dt;
     m_locTime += dt;
+    updateLiveDecals(dt);   // живые декали: TTL ~3 сек, затухание, перекладка слоя
     if (m_streakT > 0.f) { m_streakT -= dt; if (m_streakT <= 0.f) m_streak = 0; }
     if (m_fadeIn > 0.f) m_fadeIn = qMax(0.f, m_fadeIn - dt * 1.15f);
     if (m_bannerT > 0.f) m_bannerT -= dt;
@@ -4042,29 +4045,49 @@ static void paintDecalBlob(QPainter &d, int kind, float radius, const QColor &co
 void GameView::stampDecal(const QPointF &w, int kind, float radius, const QColor &col)
 {
     if (m_decals.isNull() || m_quality == 0) return;
-    const quint64 seed = quint64(int(w.x() * 31 + w.y() * 17)) ^ 0xABCD;
-    {
-        QPainter d(&m_decals);
-        d.setRenderHint(QPainter::Antialiasing, true);
-        d.scale(0.5f, 0.5f);
-        d.translate(w);
-        Rng rr(seed);
-        paintDecalBlob(d, kind, radius, col, rr);
-        d.end();
+    // боевые следы (кровь/гарь/магия) живут ~3 секунды и тают: вечные пятна
+    // превращали арену в кашу и тормозили перерисовку кэша земли
+    LiveDecal ld;
+    ld.pos = w; ld.kind = kind; ld.radius = radius; ld.col = col;
+    ld.life = 3.0f;
+    m_live.append(ld);
+    if (m_live.size() > 120) m_live.removeFirst();   // жёсткий потолок на случай мясорубки
+    m_liveDirty = true;                              // слой нужно переложить на этом тике
+}
+
+void GameView::updateLiveDecals(float dt)
+{
+    bool any = false;
+    for (int i = m_live.size() - 1; i >= 0; --i) {
+        m_live[i].life -= dt;
+        if (m_live[i].life <= 0.f) { m_live.removeAt(i); continue; }
+        any = true;
     }
-    // сразу дублируем пятно в кэш земли, чтобы не перекладывать декали каждый кадр
-    if (!m_groundZ.isNull() && qFuzzyCompare(m_groundZZoom, m_zoom)) {
-        QPainter g(&m_groundZ);
-        g.setRenderHint(QPainter::Antialiasing, true);
-        g.setOpacity(0.88f);
-        g.scale(m_groundZZoom, m_groundZZoom);
-        g.translate(w);
-        Rng rr(seed);
-        paintDecalBlob(g, kind, radius, col, rr);
-        g.end();
+    if (!any && !m_liveDirty) { m_liveDirty = false; return; }
+    m_liveDirty = false;
+    if (m_decals.isNull()) return;
+    // перекладываем живые декали в слой: старые пятна сами исчезают
+    m_decals.fill(Qt::transparent);
+    QRectF bounds;
+    QPainter d(&m_decals);
+    d.setRenderHint(QPainter::Antialiasing, true);
+    d.scale(0.5f, 0.5f);
+    for (int i = 0; i < m_live.size(); ++i) {
+        const LiveDecal &ld = m_live.at(i);
+        float k = ld.life / 3.0f;                 // 1 -> 0 за жизнь
+        float a = k > 0.6f ? 1.f : (k / 0.6f);    // последние 40% - плавное затухание
+        d.save();
+        d.setOpacity(a * 0.9f);
+        d.translate(ld.pos);
+        Rng rr(quint64(int(ld.pos.x() * 31 + ld.pos.y() * 17)) ^ 0xABCD);
+        paintDecalBlob(d, ld.kind, ld.radius, ld.col, rr);
+        d.restore();
+        QRectF b(ld.pos.x() - ld.radius * 1.4f, ld.pos.y() - ld.radius * 1.4f,
+                 ld.radius * 2.8f, ld.radius * 2.8f);
+        bounds = bounds.isNull() ? b : bounds.united(b);
     }
-    QRectF b(w.x() - radius * 1.4f, w.y() - radius * 1.4f, radius * 2.8f, radius * 2.8f);
-    m_decalBounds = m_decalBounds.isNull() ? b : m_decalBounds.united(b);
+    d.end();
+    m_decalBounds = bounds;
 }
 
 void GameView::drawWaterReflections(QPainter &p)

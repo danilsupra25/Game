@@ -36,7 +36,7 @@ protected:
     void showEvent(QShowEvent *);
 
 private slots:
-    void onStartNewGame(QString heroName, int classId);
+    void onStartNewGame(QString heroName, int classId, int diff);
     void onContinueGame();
     void onQuitGame();
     void onUiKey(int key);

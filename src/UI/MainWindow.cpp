@@ -56,7 +56,7 @@ void MainWindow::buildUi()
     // ---- титульный экран ----
     m_title = new TitleScreen(m_stack);
     m_stack->addWidget(m_title);
-    connect(m_title, SIGNAL(startNewGame(QString, int)), this, SLOT(onStartNewGame(QString, int)));
+    connect(m_title, SIGNAL(startNewGame(QString, int, int)), this, SLOT(onStartNewGame(QString, int, int)));
     connect(m_title, SIGNAL(continueGame()), this, SLOT(onContinueGame()));
     connect(m_title, SIGNAL(quitGame()), this, SLOT(onQuitGame()));
     connect(m_title, SIGNAL(showHelp()), this, SLOT(onTitleHelp()));
@@ -421,10 +421,10 @@ void MainWindow::onPanelAction(int id)
 // ============================================================
 //  ИГРОВОЙ ПОТОК
 // ============================================================
-void MainWindow::onStartNewGame(QString heroName, int classId)
+void MainWindow::onStartNewGame(QString heroName, int classId, int diff)
 {
     Audio::inst().initAssets();      // перескан: файлы могли положить после запуска
-    m_game->newGame(heroName, classId);
+    m_game->newGame(heroName, classId, diff);
     m_playing = true;
     m_stack->setCurrentWidget(m_shell);
     m_log->clear();
@@ -596,6 +596,12 @@ void MainWindow::onPlayerDied()
 
 void MainWindow::onRespawn()
 {
+    if (m_game->doomPermadeath()) {
+        // Горнило Пустоты: одна жизнь — сохранение сгорает, герой возвращается в меню
+        Game::deleteSave();
+        onQuitToMenu();
+        return;
+    }
     m_death->hide();
     Audio::inst().startMusic(2);   // возрождаемся в поселении
     m_view->respawn();

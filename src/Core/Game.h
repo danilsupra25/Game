@@ -87,6 +87,7 @@ public:
     bool loadGame(const QString &path = QString());
     static QString defaultSavePath();
     static bool saveExists(const QString &path = QString());
+    static void deleteSave(const QString &path = QString());
     static QStringList allSaves();
 
     // ---------- сложность ----------

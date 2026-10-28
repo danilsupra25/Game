@@ -376,7 +376,7 @@ public:
     void resetToMain();      // возврат в главное меню (сброс экрана выбора класса)
 
 signals:
-    void startNewGame(QString heroName, int classId);
+    void startNewGame(QString heroName, int classId, int diff);
     void continueGame();
     void quitGame();
     void showHelp();
@@ -394,6 +394,10 @@ private:
     int m_screen;
     int m_hover;
     int m_class;
+    int m_diff;                 // выбранная сложность (0..3)
+    QRectF diffRect(int i) const;   // кнопки сложности на экране выбора класса
+    QString diffName(int i) const;
+    QString diffDesc(int i) const;
     bool m_volDrag;
     QPointF m_mouse;
     float m_time;

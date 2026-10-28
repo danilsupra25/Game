@@ -274,7 +274,11 @@ private:
     QVector<FgItem> m_fg;
     struct Ghost { QPointF pos; float life; float facing; };
     QVector<Ghost> m_ghosts;
-    QImage m_decals;            // полурез-слой стойких следов (гарь, кровь, шаги, лёд)
+    QImage m_decals;            // полурез-слой живых следов (гарь, кровь, шаги, лёд) - живут ~3 сек
+    struct LiveDecal { QPointF pos; int kind; float radius; QColor col; float life; };
+    QVector<LiveDecal> m_live;  // живые декали с таймером жизни
+    bool m_liveDirty = false;   // был ли слой переложен в прошлом тике
+    void updateLiveDecals(float dt);
     QImage m_canopy;            // тайл верхнего полога (параллакс над существами)
     float m_envT = 6.f;         // таймер погодных событий биома
 

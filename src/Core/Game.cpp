@@ -74,6 +74,11 @@ bool Game::saveExists(const QString &path)
     return QFileInfo(p).exists();
 }
 
+void Game::deleteSave(const QString &path)
+{
+    QFile::remove(path.isEmpty() ? defaultSavePath() : path);
+}
+
 QStringList Game::allSaves()
 {
     QDir d(QFileInfo(defaultSavePath()).absolutePath());
@@ -342,8 +347,10 @@ void Game::recalc()
     d.dmgMin *= attrBonus * typePct;
     d.dmgMax *= attrBonus * typePct;
     d.weaponSpeed *= (d.weaponType == Dmg_Physical ? d.attackSpeed : d.castSpeed);
-    // жёсткий потолок скорости атаки: даже с горой бонусов быстрее 2.5 удара/с не выйдет
-    d.weaponSpeed = qBound(0.4f, d.weaponSpeed, 2.5f);
+    // общий разгон атаки: раньше бои затягивались, теперь темп живее (~x1.35)
+    d.weaponSpeed *= 1.35f;
+    // жёсткий потолок скорости атаки: даже с горой бонусов быстрее ~3.4 удара/с не выйдет
+    d.weaponSpeed = qBound(0.55f, d.weaponSpeed, 3.4f);
 
     d.elemBonus = hasKeystone(QStringLiteral("searedsteel")) ? 0.30f : 0.f;
 
